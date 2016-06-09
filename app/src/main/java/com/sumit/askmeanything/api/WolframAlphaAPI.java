@@ -37,7 +37,7 @@ public class WolframAlphaAPI {
     public static String getFormattedUrl(String query) {
 
         // URL Example Below :
-        // http://api.wolframalpha.com/v2/query?input=whoami&appid=ULV52R-6V56V5VT4J
+        // http://api.wolframalpha.com/v2/query?input=whoami&appid=YOUR_APP_ID
         // White spaces needs to be encoded before making the REST call
 
         try {
