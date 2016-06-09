@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Ask Me Anything</string>
+    <string name="action_about">About</string>
+    <string name="action_clear">Clear</string>
+    <string name="speech_not_supported">Voice recognition is not available at the moment.</string>
+    <string name="dismiss">DISMISS</string>
+    <string name="okay">OKAY</string>
+    <string name="speech_prompt">Say something ...</string>
+    <string name="enter_search_query">Enter search query or Tap on mic for voice input</string>
+    <string name="error_unable_to_search">Unable to retrieve data.\nPlease try again later.</string>
+    <string name="wait_message">One moment please ...</string>
+    <string name="response_title">Response Title</string>
+    <string name="response_description">Response Description</string>
+    <string name="about_dev">Designed and Developed by Sumit\nSearch powered by Wolfram Alpha</string>
+</resources>
