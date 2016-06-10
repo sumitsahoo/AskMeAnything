@@ -37,10 +37,18 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/text_show_result"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layout_query"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="20dp">
+
+        <TextView
+            android:id="@+id/text_show_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="20dp" />
+    </ScrollView>
+
 </RelativeLayout>
