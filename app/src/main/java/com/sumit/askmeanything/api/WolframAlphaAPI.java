@@ -26,7 +26,7 @@ public class WolframAlphaAPI {
 
         String resultXml = makeRestCall(getFormattedUrl(query));
 
-        if(resultXml != null)
+        if (resultXml != null)
             return ResultPodParser.parseResultXml(resultXml);
 
         return null;
@@ -62,8 +62,8 @@ public class WolframAlphaAPI {
 
         try {
             response = client.newCall(request).execute();
-            if(response != null)
-            return response.body().string();
+            if (response != null)
+                return response.body().string();
         } catch (IOException e) {
             e.printStackTrace();
         }
