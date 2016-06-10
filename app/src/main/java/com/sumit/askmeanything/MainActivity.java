@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton imageButtonVoiceInput;
     private FloatingActionButton fab;
     private ProgressDialog progressDialog;
+    private TextToSpeech textToSpeech;
 
     private final int REQ_CODE_SPEECH_INPUT = 100;
 
@@ -84,6 +86,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 initiateSearch();
+            }
+        });
+
+    }
+
+    private void initTextToSpeech() {
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
             }
         });
     }
@@ -165,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
         String result = null;
         int count = 1;
 
+        String mainResult = null;
+
         for (ResultPod resultPod : resultPods) {
 
             if (result == null) {
@@ -174,10 +190,20 @@ public class MainActivity extends AppCompatActivity {
             }
 
             result += "\n" + getString(R.string.response_description) + " (" + count + ") : " + resultPod.getDescription();
+
+            // Generally result pod 2 will have main answer to the query
+
+            if(count == 2)
+                mainResult = resultPod.getDescription();
+
             count++;
         }
 
         textViewShowResult.setText(result);
+
+        if(!textToSpeech.isSpeaking() && StringUtils.isEmpty(mainResult))
+            textToSpeech.speak(mainResult, TextToSpeech.QUEUE_FLUSH, null);
+
     }
 
     private void toggleProgressBar(boolean isShow) {
@@ -227,5 +253,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Stop Speech Engine
+
+        if(textToSpeech != null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initTextToSpeech();
     }
 }
