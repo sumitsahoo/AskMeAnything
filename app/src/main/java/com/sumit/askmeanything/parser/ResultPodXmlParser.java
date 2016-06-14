@@ -74,7 +74,10 @@ public class ResultPodXmlParser {
                     }
                 }
 
-                resultPods.add(resultPod);
+                // Do not add information if both image source and description is missing
+
+                if (StringUtils.isNotEmpty(resultPod.getImageSource()) || StringUtils.isNotEmpty(resultPod.getDescription()))
+                    resultPods.add(resultPod);
             }
 
             if (resultPods.size() > 0)
