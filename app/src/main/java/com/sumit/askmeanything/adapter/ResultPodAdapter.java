@@ -10,8 +10,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.common.util.UriUtil;
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.drawable.ProgressBarDrawable;
 import com.facebook.drawee.drawable.ScalingUtils;
+import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.sumit.askmeanything.R;
 import com.sumit.askmeanything.model.ResultPod;
@@ -110,6 +112,13 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             Uri imageUri = Uri.parse(resultPods.get(i).getImageSource());
 
+            // Enable .gif support
+
+            DraweeController controller = Fresco.newDraweeControllerBuilder()
+                    .setUri(imageUri)
+                    .setAutoPlayAnimations(true)
+                    .build();
+
             // Set padding to 0 as no border is needed. Show full image card.
 
             resultPodViewHolder.frescoDraweeViewResultImage.setPadding(0, 0, 0, 0);
@@ -119,7 +128,7 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
             resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
                     .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP);
             resultPodViewHolder.frescoDraweeViewResultImage
-                    .setImageURI(imageUri);
+                    .setController(controller);
 
         } else {
 

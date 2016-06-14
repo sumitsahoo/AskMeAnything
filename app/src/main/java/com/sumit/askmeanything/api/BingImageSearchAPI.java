@@ -43,7 +43,6 @@ public class BingImageSearchAPI {
                     .addQueryParameter("mkt", "en-us")
                     .addQueryParameter("size", "medium")                // Keep image size less to load quickly (consider slow network :P)
                     .addQueryParameter("aspect", "square")
-                    .addQueryParameter("imageType", "photo")
                     .addQueryParameter("safeSearch", "moderate")        // Filter out images that are not appropriate
                     .build();
 

@@ -3,6 +3,8 @@ package com.sumit.askmeanything.api;
 import com.sumit.askmeanything.model.ResultPod;
 import com.sumit.askmeanything.parser.ResultPodXmlParser;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -40,8 +42,20 @@ public class WolframAlphaAPI {
         // http://api.wolframalpha.com/v2/query?input=whoami&appid=YOUR_APP_ID
         // White spaces needs to be encoded before making the REST call
 
+        // Remove .gif .png .jpg .jpeg from search string
+        // Add more checks for extensions if needed
+
+        String finalQuery = StringUtils.remove(query, " gif");
+        finalQuery = StringUtils.remove(finalQuery, ".gif");
+        finalQuery = StringUtils.remove(finalQuery, " png");
+        finalQuery = StringUtils.remove(finalQuery, " .png");
+        finalQuery = StringUtils.remove(finalQuery, " jpg");
+        finalQuery = StringUtils.remove(finalQuery, " .jpg");
+        finalQuery = StringUtils.remove(finalQuery, " jpeg");
+        finalQuery = StringUtils.remove(finalQuery, " .jpeg");
+
         try {
-            return BASE_URL + "input=" + URLEncoder.encode(query, "utf-8") + "&appid=" + APP_ID;
+            return BASE_URL + "input=" + URLEncoder.encode(finalQuery, "utf-8") + "&appid=" + APP_ID;
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

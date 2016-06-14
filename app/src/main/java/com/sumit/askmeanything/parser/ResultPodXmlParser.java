@@ -61,7 +61,7 @@ public class ResultPodXmlParser {
                     // If image is present in result pods then add either get from Wikipedia or Bing Image Search API
                     // Parse Wikipedia image link
 
-                    if (StringUtils.containsIgnoreCase(imageElement.getTextContent(), "wikipedia.org"))
+                    if (StringUtils.containsIgnoreCase(imageElement.getTextContent(), "wikipedia.org") && (!StringUtils.containsIgnoreCase(query, " gif") || !StringUtils.containsIgnoreCase(query, ".gif")))
                         resultPod.setImageSource(Utils.getWikiImageURL(imageElement.getTextContent()));
                     else {
 
