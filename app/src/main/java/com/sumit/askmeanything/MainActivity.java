@@ -1,44 +1,50 @@
 package com.sumit.askmeanything;
 
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
+import android.provider.SearchRecentSuggestions;
 import android.speech.tts.TextToSpeech;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.sumit.askmeanything.adapter.ResultPodAdapter;
 import com.sumit.askmeanything.api.WolframAlphaAPI;
+import com.sumit.askmeanything.contentprovider.SearchSuggestionProvider;
 import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private Context context;
     private CoordinatorLayout coordinatorLayout;
-    private EditText editTextSearchQuery;
-    private TextView textViewShowResult;
-    private ImageButton imageButtonVoiceInput;
     private FloatingActionButton fab;
     private ProgressDialog progressDialog;
     private TextToSpeech textToSpeech;
-
-    private final int REQ_CODE_SPEECH_INPUT = 100;
+    private SearchView searchView;
+    private CardView cardView;
+    private RecyclerView recyclerView;
+    private LinearLayoutManager linearLayoutManager;
+    private ResultPodAdapter resultPodAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +53,24 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        initViews();
+        // Initialize Fresco Image Library
 
+        Fresco.initialize(context);
+
+        initViews();
+        loadDefaultCard();
+    }
+
+    private void keepSearchHistory(String query) {
+        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                SearchSuggestionProvider.AUTHORITY, SearchSuggestionProvider.MODE);
+        suggestions.saveRecentQuery(query, null);
+    }
+
+    private void clearSearchHistory() {
+        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                SearchSuggestionProvider.AUTHORITY, SearchSuggestionProvider.MODE);
+        suggestions.clearHistory();
     }
 
     private void initViews() {
@@ -67,16 +89,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup views
 
-        editTextSearchQuery = (EditText) findViewById(R.id.edit_search_query);
-        imageButtonVoiceInput = (ImageButton) findViewById(R.id.imagebutton_voice_input);
-        textViewShowResult = (TextView) findViewById(R.id.text_show_result);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        // Setting the size as fixed improves the performance
+        recyclerView.setHasFixedSize(true);
 
-        imageButtonVoiceInput.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                promptSpeechInput();
-            }
-        });
+        linearLayoutManager = new LinearLayoutManager(context);
+        recyclerView.setLayoutManager(linearLayoutManager);
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
 
@@ -85,7 +103,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                initiateSearch();
+
+                if (searchView != null) {
+                    keepSearchHistory(searchView.getQuery().toString());
+                    initiateSearch(searchView.getQuery().toString());
+                }
             }
         });
 
@@ -95,52 +117,35 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
+                if (status != TextToSpeech.ERROR) {
                     textToSpeech.setLanguage(Locale.US);
                 }
             }
         });
     }
 
-    // Show google speech input dialog
-
-    private void promptSpeechInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-                getString(R.string.speech_prompt));
-        try {
-            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-        } catch (ActivityNotFoundException a) {
-            showInformation(getString(R.string.speech_not_supported), getString(R.string.dismiss));
-        }
-    }
-
-    // Receive voice input
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void onNewIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
 
-        switch (requestCode) {
-            case REQ_CODE_SPEECH_INPUT: {
-                if (resultCode == RESULT_OK && null != data) {
-
-                    ArrayList<String> result = data
-                            .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    editTextSearchQuery.setText(result.get(0));
-                }
-                break;
+            if (searchView != null) {
+                searchView.setQuery(query, false);
+                searchView.clearFocus();
             }
 
+            keepSearchHistory(query);
+            initiateSearch(query);
         }
     }
 
-    private void initiateSearch() {
+    private void initiateSearch(String query) {
 
-        String query = editTextSearchQuery.getText().toString();
+        if (textToSpeech != null && textToSpeech.isSpeaking())
+            textToSpeech.stop();
+
+        searchView.clearFocus();
 
         new AsyncTask<String, Void, ArrayList<ResultPod>>() {
 
@@ -153,6 +158,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected ArrayList<ResultPod> doInBackground(String... params) {
 
+                if (!Utils.isNetworkAvailable(context))
+                    return null;
                 if (!StringUtils.isEmpty(params[0]))
                     return WolframAlphaAPI.getQueryResult(params[0]);
 
@@ -166,44 +173,46 @@ public class MainActivity extends AppCompatActivity {
                 toggleProgressBar(false);
                 if (resultPods != null) {
                     populateResult(resultPods);
-                } else if (resultPods == null && StringUtils.isEmpty(editTextSearchQuery.getText().toString())) {
+                } else if (!Utils.isNetworkAvailable(context)) {
+                    showInformation(getString(R.string.error_network_not_available), getString(R.string.okay));
+                } else if (searchView != null && StringUtils.isEmpty(searchView.getQuery().toString()))
                     showInformation(getString(R.string.enter_search_query), getString(R.string.okay));
-                } else
+                else
                     showInformation(getString(R.string.error_unable_to_search), getString(R.string.dismiss));
             }
         }.execute(query);
     }
 
+    private void loadDefaultCard() {
+
+        ResultPod resultPod = new ResultPod();
+        resultPod.setTitle(getString(R.string.welcome));
+        resultPod.setDescription(getString(R.string.welcome_description));
+        resultPod.setDefaultCard(true);
+
+        List<ResultPod> resultPods = new ArrayList<>();
+        resultPods.add(resultPod);
+
+        resultPodAdapter = new ResultPodAdapter(resultPods);
+        recyclerView.setAdapter(resultPodAdapter);
+    }
+
     private void populateResult(ArrayList<ResultPod> resultPods) {
 
-        String result = null;
-        int count = 1;
+        resultPodAdapter = new ResultPodAdapter(resultPods);
+        recyclerView.setAdapter(resultPodAdapter);
 
-        String mainResult = null;
+        // Generally result pod 2 will have main answer to the query
 
-        for (ResultPod resultPod : resultPods) {
+        String mainResult = resultPods.get(1).getDescription();
 
-            if (result == null) {
-                result = getString(R.string.response_title) + " (" + count + ") : " + resultPod.getTitle();
-            } else {
-                result += "\n\n" + getString(R.string.response_title) + " (" + count + ") : " + resultPod.getTitle();
-            }
+        if (StringUtils.isNotEmpty(mainResult)) {
 
-            result += "\n" + getString(R.string.response_description) + " (" + count + ") : " + resultPod.getDescription();
+            if (textToSpeech.isSpeaking())
+                textToSpeech.stop();
 
-            // Generally result pod 2 will have main answer to the query
-
-            if(count == 2)
-                mainResult = resultPod.getDescription();
-
-            count++;
-        }
-
-        textViewShowResult.setText(result);
-
-        if(!textToSpeech.isSpeaking() && StringUtils.isEmpty(mainResult))
             textToSpeech.speak(mainResult, TextToSpeech.QUEUE_FLUSH, null);
-
+        }
     }
 
     private void toggleProgressBar(boolean isShow) {
@@ -233,7 +242,40 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        // Get SearchView
+
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
+        searchView.setQueryRefinementEnabled(true);
+        searchView.setIconifiedByDefault(false);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                keepSearchHistory(query);
+                initiateSearch(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (searchView != null) {
+            //searchView.requestFocus();
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -246,13 +288,22 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_about) {
             showInformation(getString(R.string.about_dev), getString(R.string.okay));
+            searchView.clearFocus();
             return true;
-        } else if (id == R.id.action_clear) {
-            editTextSearchQuery.setText("");
-            textViewShowResult.setText("");
+        } else if (id == R.id.action_clear_history) {
+            clearSearchHistory();
+            searchView.clearFocus();
+        } else if (id == R.id.action_clear_result) {
+            clearResult();
+            searchView.clearFocus();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void clearResult() {
+        recyclerView.setAdapter(null);
+        loadDefaultCard();
     }
 
     @Override
@@ -261,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Stop Speech Engine
 
-        if(textToSpeech != null){
+        if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }

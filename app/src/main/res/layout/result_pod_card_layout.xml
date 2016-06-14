@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/result_pod_card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardUseCompatPadding="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/text_result_pod_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:padding="5dp"
+            android:text="Result Title"
+            android:textColor="@color/header_text_color"
+            android:textSize="20sp" />
+
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/image_result_pod"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_below="@+id/text_result_pod_title"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_result_pod_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/image_result_pod"
+            android:layout_margin="5dp"
+            android:text="Description"
+            android:textSize="18sp" />
+
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>

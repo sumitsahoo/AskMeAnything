@@ -1,7 +1,7 @@
 package com.sumit.askmeanything.api;
 
 import com.sumit.askmeanything.model.ResultPod;
-import com.sumit.askmeanything.parser.ResultPodParser;
+import com.sumit.askmeanything.parser.ResultPodXmlParser;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -17,7 +17,7 @@ import okhttp3.Response;
  */
 public class WolframAlphaAPI {
 
-    public static final String APP_ID = "YOUR_APP_ID";
+    public static final String APP_ID = "YOUR_APP_ID_HERE";
     public static final String BASE_URL = "http://api.wolframalpha.com/v2/query?";
 
     // Get query results
@@ -27,7 +27,7 @@ public class WolframAlphaAPI {
         String resultXml = makeRestCall(getFormattedUrl(query));
 
         if (resultXml != null)
-            return ResultPodParser.parseResultXml(resultXml);
+            return ResultPodXmlParser.parseResultXml(resultXml, query);
 
         return null;
     }

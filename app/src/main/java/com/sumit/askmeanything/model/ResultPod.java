@@ -7,6 +7,8 @@ public class ResultPod {
 
     String title;
     String description;
+    String imageSource;
+    boolean isDefaultCard;
 
     public String getTitle() {
         return title;
@@ -22,5 +24,21 @@ public class ResultPod {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getImageSource() {
+        return imageSource;
+    }
+
+    public void setImageSource(String imageSource) {
+        this.imageSource = imageSource;
+    }
+
+    public boolean isDefaultCard() {
+        return isDefaultCard;
+    }
+
+    public void setDefaultCard(boolean defaultCard) {
+        isDefaultCard = defaultCard;
     }
 }
