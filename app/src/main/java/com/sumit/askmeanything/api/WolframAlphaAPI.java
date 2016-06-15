@@ -54,6 +54,11 @@ public class WolframAlphaAPI {
         finalQuery = StringUtils.remove(finalQuery, " jpeg");
         finalQuery = StringUtils.remove(finalQuery, " .jpeg");
 
+        // If searched for only extension then re add the query
+
+        if (StringUtils.isEmpty(finalQuery))
+            finalQuery = query;
+
         try {
             return BASE_URL + "input=" + URLEncoder.encode(finalQuery, "utf-8") + "&appid=" + APP_ID;
         } catch (UnsupportedEncodingException e) {
