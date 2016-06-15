@@ -80,13 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
 
-        // Setup progress bar
-
-        progressDialog = new ProgressDialog(context);
-        progressDialog.setMessage(getString(R.string.wait_message));
-        progressDialog.setCancelable(false);
-        progressDialog.setIndeterminate(true);
-
         // Setup views
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -217,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void toggleProgressBar(boolean isShow) {
 
-        if (isShow) {
+        if (progressDialog != null && isShow) {
             progressDialog.show();
         } else {
             if (progressDialog != null) {
@@ -309,6 +302,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        // Setup progress bar
+
+        progressDialog = new ProgressDialog(context);
+        progressDialog.setMessage(getString(R.string.wait_message));
+        progressDialog.setCancelable(false);
+        progressDialog.setIndeterminate(true);
+
 
         // Stop Speech Engine
 
