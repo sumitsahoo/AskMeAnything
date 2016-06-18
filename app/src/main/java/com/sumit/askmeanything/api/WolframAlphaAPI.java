@@ -19,7 +19,7 @@ import okhttp3.Response;
  */
 public class WolframAlphaAPI {
 
-    public static final String APP_ID = "YOUR_APP_ID_HERE";
+    public static final String APP_ID = "YOUR_APP_ID";
     public static final String BASE_URL = "http://api.wolframalpha.com/v2/query?";
 
     // Get query results

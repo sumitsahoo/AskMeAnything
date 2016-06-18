@@ -1,18 +1,27 @@
 package com.sumit.askmeanything;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.SearchRecentSuggestions;
 import android.speech.tts.TextToSpeech;
+import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -23,28 +32,52 @@ import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.sumit.askmeanything.adapter.ResultPodAdapter;
+import com.sumit.askmeanything.api.MicrosoftCognitiveAPI;
 import com.sumit.askmeanything.api.WolframAlphaAPI;
 import com.sumit.askmeanything.contentprovider.SearchSuggestionProvider;
 import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int MY_PERMISSIONS_REQUEST_CODE = 100;
     private Context context;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton fab;
     private ProgressDialog progressDialog;
     private TextToSpeech textToSpeech;
     private SearchView searchView;
-    private CardView cardView;
     private RecyclerView recyclerView;
     private LinearLayoutManager linearLayoutManager;
     private ResultPodAdapter resultPodAdapter;
+    private Uri imageFileUri;
+    private int cameraPermissionCheck = PackageManager.PERMISSION_DENIED;
+    private int externalStoragePermissionCheck = PackageManager.PERMISSION_DENIED;
+
+    private static File getOutputMediaFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "AskMeAnything");
+
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                return null;
+            }
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        return new File(mediaStorageDir.getPath() + File.separator +
+                "IMG_" + timeStamp + ".jpg");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +92,45 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
         loadDefaultCard();
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1)
+            verifyAndRequestPermission();
+    }
+
+    private void verifyAndRequestPermission() {
+        // For marshmallow we need to manually check and prompt for permission
+
+        cameraPermissionCheck = ContextCompat.checkSelfPermission(context,
+                Manifest.permission.CAMERA);
+
+        externalStoragePermissionCheck = ContextCompat.checkSelfPermission(context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+
+        if (cameraPermissionCheck != PackageManager.PERMISSION_GRANTED || externalStoragePermissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_CODE);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_CODE: {
+                if (grantResults.length > 0) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                        cameraPermissionCheck = PackageManager.PERMISSION_GRANTED;
+                    if (grantResults[1] == PackageManager.PERMISSION_GRANTED)
+                        externalStoragePermissionCheck = PackageManager.PERMISSION_GRANTED;
+
+                }
+                return;
+            }
+        }
     }
 
     private void keepSearchHistory(String query) {
@@ -99,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (searchView != null) {
                     keepSearchHistory(searchView.getQuery().toString());
-                    initiateSearch(searchView.getQuery().toString());
+                    initiateSearch(searchView.getQuery().toString(), SearchType.QUERY);
                 }
             }
         });
@@ -117,6 +189,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void stopTextToSpeech() {
+        if (textToSpeech != null && textToSpeech.isSpeaking())
+            textToSpeech.stop();
+    }
+
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -129,14 +206,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             keepSearchHistory(query);
-            initiateSearch(query);
+            initiateSearch(query, SearchType.QUERY);
         }
     }
 
-    private void initiateSearch(String query) {
+    private void initiateSearch(String query, final SearchType searchType) {
 
-        if (textToSpeech != null && textToSpeech.isSpeaking())
-            textToSpeech.stop();
+        stopTextToSpeech();
 
         searchView.clearFocus();
 
@@ -153,8 +229,29 @@ public class MainActivity extends AppCompatActivity {
 
                 if (!Utils.isNetworkAvailable(context))
                     return null;
-                if (!StringUtils.isEmpty(params[0]))
+
+                if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0]))
                     return WolframAlphaAPI.getQueryResult(params[0]);
+                else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
+
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(imageFileUri);
+                        String imageDescription = MicrosoftCognitiveAPI.getImageDescription(BitmapFactory.decodeStream(inputStream));
+
+                        ResultPod resultPod = new ResultPod();
+                        resultPod.setDefaultCard(true);
+                        resultPod.setDescription(imageDescription);
+                        resultPod.setImageSource(imageFileUri.toString());
+
+                        List<ResultPod> resultPods = new ArrayList<ResultPod>();
+                        resultPods.add(resultPod);
+
+                        return (ArrayList<ResultPod>) resultPods;
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 return null;
             }
@@ -164,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
                 super.onPostExecute(resultPods);
 
                 toggleProgressBar(false);
+
                 if (resultPods != null) {
                     populateResult(resultPods);
                 } else if (!Utils.isNetworkAvailable(context)) {
@@ -196,21 +294,27 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(resultPodAdapter);
 
         // Generally result pod 2 will have main answer to the query
+        // If image recognition is used then description will be in 0th element
 
-        String mainResult = resultPods.get(1).getDescription();
+        String mainResult = null;
+
+        try {
+            mainResult = resultPods.get(1).getDescription();
+        } catch (Exception e) {
+            // This means there is no 2nd pod.
+            mainResult = resultPods.get(0).getDescription();
+        }
 
         if (StringUtils.isNotEmpty(mainResult)) {
 
-            if (textToSpeech.isSpeaking())
-                textToSpeech.stop();
-
+            stopTextToSpeech();
             textToSpeech.speak(mainResult, TextToSpeech.QUEUE_FLUSH, null);
         }
     }
 
     private void toggleProgressBar(boolean isShow) {
 
-        if (progressDialog != null && isShow) {
+        if (progressDialog != null && isShow && !progressDialog.isShowing()) {
             progressDialog.show();
         } else {
             if (progressDialog != null) {
@@ -250,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 keepSearchHistory(query);
-                initiateSearch(query);
+                initiateSearch(query, SearchType.QUERY);
                 return false;
             }
 
@@ -289,12 +393,44 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_clear_result) {
             clearResult();
             searchView.clearFocus();
+        } else if (id == R.id.action_recognize_photo) {
+
+            stopTextToSpeech();
+
+            if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
+                startImageCapture();
+            } else {
+                verifyAndRequestPermission();
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void startImageCapture() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        imageFileUri = Uri.fromFile(getOutputMediaFile());
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageFileUri);
+
+        startActivityForResult(intent, 100);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == 100) {
+            if (resultCode == RESULT_OK) {
+                // Start searching for the description for the image taken
+                if (imageFileUri != null)
+                    initiateSearch("", SearchType.IMAGE_DESCRIPTION);
+            }
+        }
+    }
+
     private void clearResult() {
+
+        stopTextToSpeech();
         recyclerView.setAdapter(null);
         loadDefaultCard();
     }
@@ -303,13 +439,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
-        // Setup progress bar
-
-        progressDialog = new ProgressDialog(context);
-        progressDialog.setMessage(getString(R.string.wait_message));
-        progressDialog.setCancelable(false);
-        progressDialog.setIndeterminate(true);
-
+        toggleProgressBar(false);
 
         // Stop Speech Engine
 
@@ -322,6 +452,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Setup progress bar
+
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setMessage(getString(R.string.wait_message));
+            progressDialog.setCancelable(false);
+            progressDialog.setIndeterminate(true);
+        }
+
         initTextToSpeech();
+    }
+
+    public enum SearchType {
+        QUERY(1), IMAGE_DESCRIPTION(2);
+        private int value;
+
+        SearchType(int value) {
+            this.value = value;
+        }
     }
 }

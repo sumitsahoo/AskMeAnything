@@ -1,7 +1,7 @@
 package com.sumit.askmeanything.parser;
 
 import com.sumit.askmeanything.Utils;
-import com.sumit.askmeanything.api.BingImageSearchAPI;
+import com.sumit.askmeanything.api.MicrosoftCognitiveAPI;
 import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
@@ -49,9 +49,10 @@ public class ResultPodXmlParser {
 
                 resultPod.setTitle(((Element) pod).getAttribute("title"));
 
+                // Set description only if it is available
+
                 if (StringUtils.isNotEmpty(descriptionElement.getTextContent()))
                     resultPod.setDescription(descriptionElement.getTextContent());
-                else resultPod.setDescription("More information not available at the moment.");
 
                 // Set image source URL if any
 
@@ -67,7 +68,7 @@ public class ResultPodXmlParser {
 
                         // If image is not from Wikipedia then search using Bing Image API instead
 
-                        String imageUrl = BingImageSearchAPI.getImageUrl(query);
+                        String imageUrl = MicrosoftCognitiveAPI.getImageUrl(query);
 
                         if (StringUtils.isNotEmpty(imageUrl))
                             resultPod.setImageSource(imageUrl);

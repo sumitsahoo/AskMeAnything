@@ -74,7 +74,7 @@ public class Utils {
         snackbarView.setBackgroundColor(Color.DKGRAY);
 
         TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-        textView.setMaxLines(2);
+        textView.setMaxLines(6);
 
         //textView.setTextColor(Color.WHITE);
         //textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);

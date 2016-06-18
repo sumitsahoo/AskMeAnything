@@ -27,25 +27,8 @@ import java.util.List;
  */
 public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.ResultPodViewHolder> {
 
-    Context context;
-
-    public static class ResultPodViewHolder extends RecyclerView.ViewHolder {
-
-        CardView cardView;
-        TextView textViewResultPodTitle;
-        TextView textViewResultPodDescription;
-        SimpleDraweeView frescoDraweeViewResultImage;
-
-        ResultPodViewHolder(View itemView) {
-            super(itemView);
-            cardView = (CardView) itemView.findViewById(R.id.result_pod_card_view);
-            textViewResultPodTitle = (TextView) itemView.findViewById(R.id.text_result_pod_title);
-            textViewResultPodDescription = (TextView) itemView.findViewById(R.id.text_result_pod_description);
-            frescoDraweeViewResultImage = (SimpleDraweeView) itemView.findViewById(R.id.image_result_pod);
-        }
-    }
-
     List<ResultPod> resultPods;
+    private Context context;
 
     public ResultPodAdapter(List<ResultPod> resultPods) {
         this.resultPods = resultPods;
@@ -79,19 +62,43 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             resultPodViewHolder.frescoDraweeViewResultImage.setVisibility(View.VISIBLE);
 
-            // Load wink image using Fresco
+            // Resource File Example : file:///storage/emulated/0/Pictures/AskMeAnything/IMG_20160617_231541.jpg
 
-            Uri imageUri = new Uri.Builder()
-                    .scheme(UriUtil.LOCAL_RESOURCE_SCHEME) // "res"
-                    .path(String.valueOf(R.drawable.ic_wink))
-                    .build();
+            Uri imageUri = null;
 
-            // Added padding to have some spacing between title, image and description
+            if (StringUtils.containsIgnoreCase(resultPods.get(i).getImageSource(), "file:///storage/")) {
 
-            resultPodViewHolder.frescoDraweeViewResultImage.setPadding(0, 20, 0, 20);
+                // Load picture taken
 
-            resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
-                    .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_INSIDE);
+                imageUri = Uri.parse(resultPods.get(i).getImageSource());
+
+                // Hide Title
+
+                resultPodViewHolder.textViewResultPodTitle.setVisibility(View.GONE);
+
+                resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
+                        .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP);
+
+            } else {
+
+                // Show Title
+
+                resultPodViewHolder.textViewResultPodTitle.setVisibility(View.VISIBLE);
+
+                // Load wink image using Fresco
+
+                imageUri = new Uri.Builder()
+                        .scheme(UriUtil.LOCAL_RESOURCE_SCHEME) // "res"
+                        .path(String.valueOf(R.drawable.ic_wink))
+                        .build();
+
+                resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
+                        .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_INSIDE);
+
+                // Added padding to have some spacing between title, image and description
+
+                resultPodViewHolder.frescoDraweeViewResultImage.setPadding(0, 20, 0, 20);
+            }
 
             resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
                     .setProgressBarImage(new ProgressBarDrawable());
@@ -141,5 +148,21 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
     @Override
     public int getItemCount() {
         return resultPods.size();
+    }
+
+    public static class ResultPodViewHolder extends RecyclerView.ViewHolder {
+
+        CardView cardView;
+        TextView textViewResultPodTitle;
+        TextView textViewResultPodDescription;
+        SimpleDraweeView frescoDraweeViewResultImage;
+
+        ResultPodViewHolder(View itemView) {
+            super(itemView);
+            cardView = (CardView) itemView.findViewById(R.id.result_pod_card_view);
+            textViewResultPodTitle = (TextView) itemView.findViewById(R.id.text_result_pod_title);
+            textViewResultPodDescription = (TextView) itemView.findViewById(R.id.text_result_pod_description);
+            frescoDraweeViewResultImage = (SimpleDraweeView) itemView.findViewById(R.id.image_result_pod);
+        }
     }
 }
