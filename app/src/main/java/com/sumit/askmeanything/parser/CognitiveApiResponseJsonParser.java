@@ -1,10 +1,16 @@
 package com.sumit.askmeanything.parser;
 
+import android.net.Uri;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sumit on 6/14/2016.
@@ -26,9 +32,7 @@ public class CognitiveApiResponseJsonParser {
         return imageUrl;
     }
 
-    public static String getImageDescription(JsonObject jsonObject) {
-
-        String fullDescription = null;
+    public static List<ResultPod> getImageDescription(JsonObject jsonObject, Uri imageFileUri) {
 
         String imageDescription = null;
         String tags = null;
@@ -56,7 +60,11 @@ public class CognitiveApiResponseJsonParser {
             JsonObject celebrityObject = celebrityArray.get(0).getAsJsonObject().getAsJsonObject("detail");
 
             if (celebrityObject != null) {
-                celebrityName = ((JsonObject) celebrityObject.getAsJsonArray("celebrities").get(0)).get("name").getAsString();
+                try {
+                    celebrityName = ((JsonObject) celebrityObject.getAsJsonArray("celebrities").get(0)).get("name").getAsString();
+                } catch (IndexOutOfBoundsException e) {
+                    celebrityName = null;
+                }
             }
         }
 
@@ -104,13 +112,49 @@ public class CognitiveApiResponseJsonParser {
 
         // Prepare full image description
 
-        fullDescription = "Description : " + imageDescription;
-        fullDescription += StringUtils.isNotEmpty(celebrityName) ? "\n\nCelebrity Name : " + celebrityName : "";
-        fullDescription += StringUtils.isNotEmpty(gender) ? "\n\nDetected Gender : " + gender : "";
-        fullDescription += age != -1 ? "\nDetected Age : " + age : "";
-        fullDescription += StringUtils.isNotEmpty(dominantColors) ? "\n\nDominant Colors : " + dominantColors : "";
-        fullDescription += "\n\nTags : " + tags;
+        List<ResultPod> resultPods = new ArrayList<>();
 
-        return fullDescription;
+        ResultPod descriptionCard = new ResultPod();
+        descriptionCard.setDescription(StringUtils.capitalize(imageDescription));
+        descriptionCard.setTitle("Image Description");
+        descriptionCard.setDefaultCard(true);
+        descriptionCard.setImageSource(imageFileUri.toString());
+
+        ResultPod personalCard = new ResultPod();
+        personalCard.setDefaultCard(false);
+        personalCard.setTitle("Person Details");
+
+        String personalDetails = StringUtils.isNotEmpty(celebrityName) ? "Celebrity Name : " + celebrityName : "";
+        if (StringUtils.isNotEmpty(celebrityName))
+            personalDetails += StringUtils.isNotEmpty(gender) ? "\nDetected Gender : " + gender : "";
+        else personalDetails += StringUtils.isNotEmpty(gender) ? "Detected Gender : " + gender : "";
+        personalDetails += age != -1 ? "\nDetected Age : " + age : "";
+
+        personalCard.setDescription(personalDetails);
+
+        ResultPod colorCard = new ResultPod();
+        colorCard.setTitle("Dominant Colors");
+        colorCard.setDescription(dominantColors);
+        colorCard.setDefaultCard(false);
+
+        ResultPod tagCard = new ResultPod();
+        tagCard.setTitle("Image Tags");
+        tagCard.setDefaultCard(false);
+        tagCard.setDescription(tags);
+
+        // Add results to ArrayList
+
+        resultPods.add(descriptionCard);
+
+        if (StringUtils.isNotEmpty(celebrityName) || StringUtils.isNotEmpty(gender) || age != -1)
+            resultPods.add(personalCard);
+
+        if (StringUtils.isNotEmpty(dominantColors))
+            resultPods.add(colorCard);
+
+        if (StringUtils.isNotEmpty(tags))
+            resultPods.add(tagCard);
+
+        return resultPods;
     }
 }

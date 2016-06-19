@@ -6,7 +6,6 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -40,8 +39,6 @@ import com.sumit.askmeanything.model.ResultPod;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -230,27 +227,10 @@ public class MainActivity extends AppCompatActivity {
                 if (!Utils.isNetworkAvailable(context))
                     return null;
 
-                if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0]))
+                if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0])) {
                     return WolframAlphaAPI.getQueryResult(params[0]);
-                else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
-
-                    try {
-                        InputStream inputStream = getContentResolver().openInputStream(imageFileUri);
-                        String imageDescription = MicrosoftCognitiveAPI.getImageDescription(BitmapFactory.decodeStream(inputStream));
-
-                        ResultPod resultPod = new ResultPod();
-                        resultPod.setDefaultCard(true);
-                        resultPod.setDescription(imageDescription);
-                        resultPod.setImageSource(imageFileUri.toString());
-
-                        List<ResultPod> resultPods = new ArrayList<ResultPod>();
-                        resultPods.add(resultPod);
-
-                        return (ArrayList<ResultPod>) resultPods;
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                } else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
+                    return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
                 }
 
                 return null;
@@ -262,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
                 toggleProgressBar(false);
 
-                if (resultPods != null) {
+                if (resultPods != null && resultPods.size() > 0) {
                     populateResult(resultPods);
                 } else if (!Utils.isNetworkAvailable(context)) {
                     showInformation(getString(R.string.error_network_not_available), getString(R.string.okay));

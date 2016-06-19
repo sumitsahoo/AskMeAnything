@@ -1,15 +1,22 @@
 package com.sumit.askmeanything.api;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sumit.askmeanything.model.ResultPod;
 import com.sumit.askmeanything.parser.CognitiveApiResponseJsonParser;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -81,15 +88,23 @@ public class MicrosoftCognitiveAPI {
         return imageUrl;
     }
 
-    public static String getImageDescription(Bitmap originalImage) {
+    public static ArrayList<ResultPod> getImageDescription(Uri imageFileUri, Context context) {
 
-        String imageDescription = null;
+        InputStream inputStream = null;
+
+        try {
+            inputStream = context.getContentResolver().openInputStream(imageFileUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        Bitmap originalImage = BitmapFactory.decodeStream(inputStream);
+
         HttpUrl url = null;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         originalImage.compress(Bitmap.CompressFormat.JPEG, 70, out);
-        //Bitmap decodedImage = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
-
 
         try {
 
@@ -128,7 +143,7 @@ public class MicrosoftCognitiveAPI {
             response = client.newCall(request).execute();
             if (response != null) {
                 JsonObject responseObject = new JsonParser().parse(response.body().string()).getAsJsonObject();
-                imageDescription = CognitiveApiResponseJsonParser.getImageDescription(responseObject);
+                return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.getImageDescription(responseObject, imageFileUri);
             }
 
         } catch (UnsupportedEncodingException e) {
@@ -137,7 +152,7 @@ public class MicrosoftCognitiveAPI {
             e.printStackTrace();
         }
 
-        return imageDescription;
+        return null;
     }
 
 }

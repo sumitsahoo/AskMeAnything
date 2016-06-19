@@ -72,10 +72,6 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
                 imageUri = Uri.parse(resultPods.get(i).getImageSource());
 
-                // Hide Title
-
-                resultPodViewHolder.textViewResultPodTitle.setVisibility(View.GONE);
-
                 resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
                         .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP);
 
