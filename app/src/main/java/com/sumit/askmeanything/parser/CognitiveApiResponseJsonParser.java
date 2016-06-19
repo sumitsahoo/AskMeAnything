@@ -120,17 +120,17 @@ public class CognitiveApiResponseJsonParser {
         descriptionCard.setDefaultCard(true);
         descriptionCard.setImageSource(imageFileUri.toString());
 
-        ResultPod personalCard = new ResultPod();
-        personalCard.setDefaultCard(false);
-        personalCard.setTitle("Person Details");
+        ResultPod personCard = new ResultPod();
+        personCard.setDefaultCard(false);
+        personCard.setTitle("Person Details");
 
-        String personalDetails = StringUtils.isNotEmpty(celebrityName) ? "Celebrity Name : " + celebrityName : "";
+        String personDetails = StringUtils.isNotEmpty(celebrityName) ? "Celebrity Name : " + celebrityName : "";
         if (StringUtils.isNotEmpty(celebrityName))
-            personalDetails += StringUtils.isNotEmpty(gender) ? "\nDetected Gender : " + gender : "";
-        else personalDetails += StringUtils.isNotEmpty(gender) ? "Detected Gender : " + gender : "";
-        personalDetails += age != -1 ? "\nDetected Age : " + age : "";
+            personDetails += StringUtils.isNotEmpty(gender) ? "\nDetected Gender : " + gender : "";
+        else personDetails += StringUtils.isNotEmpty(gender) ? "Detected Gender : " + gender : "";
+        personDetails += age != -1 ? "\nDetected Age : " + age : "";
 
-        personalCard.setDescription(personalDetails);
+        personCard.setDescription(personDetails);
 
         ResultPod colorCard = new ResultPod();
         colorCard.setTitle("Dominant Colors");
@@ -147,7 +147,7 @@ public class CognitiveApiResponseJsonParser {
         resultPods.add(descriptionCard);
 
         if (StringUtils.isNotEmpty(celebrityName) || StringUtils.isNotEmpty(gender) || age != -1)
-            resultPods.add(personalCard);
+            resultPods.add(personCard);
 
         if (StringUtils.isNotEmpty(dominantColors))
             resultPods.add(colorCard);
