@@ -124,10 +124,10 @@ public class CognitiveApiResponseJsonParser {
         personCard.setDefaultCard(false);
         personCard.setTitle("Person Details");
 
-        String personDetails = StringUtils.isNotEmpty(celebrityName) ? "Celebrity Name : " + celebrityName : "";
+        String personDetails = StringUtils.isNotEmpty(celebrityName) ? "Name : " + celebrityName : "";
         if (StringUtils.isNotEmpty(celebrityName))
             personDetails += StringUtils.isNotEmpty(gender) ? "\nDetected Gender : " + gender : "";
-        else personDetails += StringUtils.isNotEmpty(gender) ? "Detected Gender : " + gender : "";
+        else personDetails = StringUtils.isNotEmpty(gender) ? "Detected Gender : " + gender : "";
         personDetails += age != -1 ? "\nDetected Age : " + age : "";
 
         personCard.setDescription(personDetails);
