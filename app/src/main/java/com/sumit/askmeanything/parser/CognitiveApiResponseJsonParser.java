@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class CognitiveApiResponseJsonParser {
 
-    public static String getImageUrlFromResponseJson(JsonObject jsonObject) {
+    public static String parseImageUrlFromResponseJson(JsonObject jsonObject) {
 
         String imageUrl = null;
 
@@ -32,7 +32,7 @@ public class CognitiveApiResponseJsonParser {
         return imageUrl;
     }
 
-    public static List<ResultPod> getImageDescription(JsonObject jsonObject, Uri imageFileUri) {
+    public static List<ResultPod> parseImageDescriptionFromResponseJson(JsonObject jsonObject, Uri imageFileUri) {
 
         String imageDescription = null;
         String tags = null;
@@ -154,6 +154,62 @@ public class CognitiveApiResponseJsonParser {
 
         if (StringUtils.isNotEmpty(tags))
             resultPods.add(tagCard);
+
+        return resultPods;
+    }
+
+    // Parse OCR Response JSON
+
+    public static List<ResultPod> parseOcrTextFromResponseJson(JsonObject jsonObject, Uri imageFileUri) {
+
+        ArrayList<ResultPod> resultPods = null;
+        String ocrResponseText = null;
+
+        JsonArray regionArray = jsonObject.getAsJsonArray("regions");
+
+        if (regionArray != null && regionArray.size() > 0) {
+            for (JsonElement regionObject : regionArray) {
+                JsonArray linesArray = ((JsonObject) regionObject).getAsJsonArray("lines");
+
+                if (linesArray != null && linesArray.size() > 0) {
+                    for (JsonElement lineObject : linesArray) {
+                        JsonArray wordsArray = ((JsonObject) lineObject).getAsJsonArray("words");
+
+                        if (wordsArray != null && wordsArray.size() > 0) {
+
+                            int wordCount = 0;
+
+                            for (JsonElement wordObject : wordsArray) {
+
+                                if (StringUtils.isEmpty(ocrResponseText)) {
+                                    ocrResponseText = ((JsonObject) wordObject).get("text").getAsString();
+                                } else {
+                                    if (wordCount == 0)
+                                        ocrResponseText += ((JsonObject) wordObject).get("text").getAsString();
+                                    else
+                                        ocrResponseText += " " + ((JsonObject) wordObject).get("text").getAsString();
+                                }
+
+                                wordCount++;
+                            }
+                        }
+
+                        ocrResponseText += "\n";
+                    }
+                }
+            }
+        }
+
+        if (StringUtils.isNotEmpty(ocrResponseText)) {
+            ResultPod resultPod = new ResultPod();
+            resultPod.setDefaultCard(true);
+            resultPod.setTitle("OCR Text");
+            resultPod.setImageSource(imageFileUri.toString());
+            resultPod.setDescription(ocrResponseText);
+
+            resultPods = new ArrayList<>();
+            resultPods.add(resultPod);
+        }
 
         return resultPods;
     }

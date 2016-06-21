@@ -19,4 +19,5 @@
     <string name="welcome_description">To get information on anything enter your search query in the search bar. You can also use voice input to enter query.\n\nTap on menu and select \"Recognize Photo\" to take a photo and get description.</string>
     <string name="error_network_not_available">Please check your network connectivity and try again.</string>
     <string name="menu_recognize_photo">Recognize Photo</string>
+    <string name="menu_run_ocr">OCR</string>
 </resources>

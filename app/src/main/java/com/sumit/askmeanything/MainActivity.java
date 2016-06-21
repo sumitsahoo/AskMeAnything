@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.sumit.askmeanything.adapter.ResultPodAdapter;
 import com.sumit.askmeanything.api.MicrosoftCognitiveAPI;
 import com.sumit.askmeanything.api.WolframAlphaAPI;
@@ -83,15 +84,36 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        // Initialize Fresco Image Library
-
-        Fresco.initialize(context);
+        initFrescoLibrary();
 
         initViews();
         loadDefaultCard();
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1)
             verifyAndRequestPermission();
+    }
+
+    // Initialize Fresco Image Library
+
+    private void initFrescoLibrary() {
+        ImagePipelineConfig config = ImagePipelineConfig.newBuilder(context)
+                //.setBitmapMemoryCacheParamsSupplier(bitmapCacheParamsSupplier)
+                //.setCacheKeyFactory(cacheKeyFactory)
+                .setDownsampleEnabled(true) // This reduces strain on GPU and keeps UI fluid
+                //.setWebpSupportEnabled(true)
+                //.setEncodedMemoryCacheParamsSupplier(encodedCacheParamsSupplier)
+                //.setExecutorSupplier(executorSupplier)
+                //.setImageCacheStatsTracker(imageCacheStatsTracker)
+                //.setMainDiskCacheConfig(mainDiskCacheConfig)
+                //.setMemoryTrimmableRegistry(memoryTrimmableRegistry)
+                //.setNetworkFetchProducer(networkFetchProducer)
+                //.setPoolFactory(poolFactory)
+                //.setProgressiveJpegConfig(progressiveJpegConfig)
+                //.setRequestListeners(requestListeners)
+                //.setSmallImageDiskCacheConfig(smallImageDiskCacheConfig)
+                .build();
+
+        Fresco.initialize(context, config);
     }
 
     private void verifyAndRequestPermission() {
@@ -231,6 +253,8 @@ public class MainActivity extends AppCompatActivity {
                     return WolframAlphaAPI.getQueryResult(params[0]);
                 } else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
                     return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
+                } else if (searchType == SearchType.OCR && imageFileUri != null) {
+                    return MicrosoftCognitiveAPI.getOCRText(imageFileUri, context);
                 }
 
                 return null;
@@ -246,9 +270,7 @@ public class MainActivity extends AppCompatActivity {
                     populateResult(resultPods);
                 } else if (!Utils.isNetworkAvailable(context)) {
                     showInformation(getString(R.string.error_network_not_available), getString(R.string.okay));
-                } else if (searchView != null && StringUtils.isEmpty(searchView.getQuery().toString()))
-                    showInformation(getString(R.string.enter_search_query), getString(R.string.okay));
-                else
+                } else
                     showInformation(getString(R.string.error_unable_to_search), getString(R.string.dismiss));
             }
         }.execute(query);
@@ -378,33 +400,40 @@ public class MainActivity extends AppCompatActivity {
             stopTextToSpeech();
 
             if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
-                startImageCapture();
+                startImageCapture(SearchType.IMAGE_DESCRIPTION);
             } else {
                 verifyAndRequestPermission();
             }
+        } else if (id == R.id.action_run_ocr) {
+            stopTextToSpeech();
 
+            if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
+                startImageCapture(SearchType.OCR);
+            } else {
+                verifyAndRequestPermission();
+            }
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void startImageCapture() {
+    private void startImageCapture(SearchType searchType) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         imageFileUri = Uri.fromFile(getOutputMediaFile());
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageFileUri);
 
-        startActivityForResult(intent, 100);
+        startActivityForResult(intent, searchType.value);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == 100) {
-            if (resultCode == RESULT_OK) {
-                // Start searching for the description for the image taken
-                if (imageFileUri != null)
-                    initiateSearch("", SearchType.IMAGE_DESCRIPTION);
-            }
+        if (requestCode == SearchType.IMAGE_DESCRIPTION.value && resultCode == RESULT_OK && imageFileUri != null) {
+            // Start searching for the description for the image taken
+            initiateSearch("", SearchType.IMAGE_DESCRIPTION);
+        } else if (requestCode == SearchType.OCR.value && resultCode == RESULT_OK && imageFileUri != null) {
+            // Start OCR
+            initiateSearch("", SearchType.OCR);
         }
     }
 
@@ -446,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public enum SearchType {
-        QUERY(1), IMAGE_DESCRIPTION(2);
+        QUERY(1), IMAGE_DESCRIPTION(2), OCR(3);
         private int value;
 
         SearchType(int value) {

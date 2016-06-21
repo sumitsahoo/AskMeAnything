@@ -76,7 +76,7 @@ public class MicrosoftCognitiveAPI {
             response = client.newCall(request).execute();
             if (response != null) {
                 JsonObject responseObject = new JsonParser().parse(response.body().string()).getAsJsonObject();
-                imageUrl = CognitiveApiResponseJsonParser.getImageUrlFromResponseJson(responseObject);
+                imageUrl = CognitiveApiResponseJsonParser.parseImageUrlFromResponseJson(responseObject);
             }
 
         } catch (UnsupportedEncodingException e) {
@@ -87,6 +87,8 @@ public class MicrosoftCognitiveAPI {
 
         return imageUrl;
     }
+
+    // Describe image
 
     public static ArrayList<ResultPod> getImageDescription(Uri imageFileUri, Context context) {
 
@@ -143,7 +145,75 @@ public class MicrosoftCognitiveAPI {
             response = client.newCall(request).execute();
             if (response != null) {
                 JsonObject responseObject = new JsonParser().parse(response.body().string()).getAsJsonObject();
-                return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.getImageDescription(responseObject, imageFileUri);
+                return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.parseImageDescriptionFromResponseJson(responseObject, imageFileUri);
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // Read text from image
+
+    public static ArrayList<ResultPod> getOCRText(Uri imageFileUri, Context context) {
+
+        InputStream inputStream = null;
+
+        try {
+            inputStream = context.getContentResolver().openInputStream(imageFileUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        Bitmap originalImage = BitmapFactory.decodeStream(inputStream);
+
+        HttpUrl url = null;
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        originalImage.compress(Bitmap.CompressFormat.JPEG, 70, out);
+
+        try {
+
+            // Prepare Image Recognition URL with parameters
+            // End Point URL : https://api.projectoxford.ai/vision/v1.0/ocr[?language][&detectOrientation ]
+
+            url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host("api.projectoxford.ai")
+                    .addPathSegment("vision")
+                    .addPathSegment("v1.0")
+                    .addPathSegment("ocr")
+                    .addQueryParameter("language", "en")
+                    .build();
+
+            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("image", "fileName", RequestBody.create(MediaType.parse("image/jpeg"), out.toByteArray()))
+                    .build();
+
+
+            // Build request and add subscription key header
+
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .addHeader("Ocp-Apim-Subscription-Key", COMPUTER_VISION_SUBSCRIPTION_KEY)
+                    .addHeader("Content-Type", "application/octet-stream")
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+
+            Response response = null;
+
+            // Initiate REST call
+
+            response = client.newCall(request).execute();
+            if (response != null) {
+                JsonObject responseObject = new JsonParser().parse(response.body().string()).getAsJsonObject();
+                return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.parseOcrTextFromResponseJson(responseObject, imageFileUri);
             }
 
         } catch (UnsupportedEncodingException e) {

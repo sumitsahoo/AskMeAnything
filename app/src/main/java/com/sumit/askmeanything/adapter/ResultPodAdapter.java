@@ -1,5 +1,7 @@
 package com.sumit.askmeanything.adapter;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v7.widget.CardView;
@@ -8,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.common.util.UriUtil;
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -52,13 +55,32 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
     }
 
     @Override
-    public void onBindViewHolder(ResultPodViewHolder resultPodViewHolder, int i) {
-        resultPodViewHolder.textViewResultPodTitle.setText(resultPods.get(i).getTitle());
-        resultPodViewHolder.textViewResultPodDescription.setText(resultPods.get(i).getDescription());
+    public void onBindViewHolder(ResultPodViewHolder resultPodViewHolder, final int position) {
+
+        resultPodViewHolder.textViewResultPodTitle.setText(resultPods.get(position).getTitle());
+        resultPodViewHolder.textViewResultPodDescription.setText(resultPods.get(position).getDescription());
+
+        // Long tap/press to copy description
+
+        resultPodViewHolder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                if (StringUtils.isNotEmpty(resultPods.get(position).getDescription())) {
+                    ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clipData = ClipData.newPlainText("Description Copied", resultPods.get(position).getDescription());
+                    clipboardManager.setPrimaryClip(clipData);
+
+                    Toast.makeText(context, "Description copied to clipboard", Toast.LENGTH_LONG).show();
+                }
+
+                return false;
+            }
+        });
 
         // Use Fresco to load images Asynchronously
 
-        if (resultPods.get(i).isDefaultCard()) {
+        if (resultPods.get(position).isDefaultCard()) {
 
             resultPodViewHolder.frescoDraweeViewResultImage.setVisibility(View.VISIBLE);
 
@@ -66,11 +88,11 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             Uri imageUri = null;
 
-            if (StringUtils.containsIgnoreCase(resultPods.get(i).getImageSource(), "file:///storage/")) {
+            if (StringUtils.containsIgnoreCase(resultPods.get(position).getImageSource(), "file:///storage/")) {
 
                 // Load picture taken
 
-                imageUri = Uri.parse(resultPods.get(i).getImageSource());
+                imageUri = Uri.parse(resultPods.get(position).getImageSource());
 
                 resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
                         .setActualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP);
@@ -101,7 +123,7 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             resultPodViewHolder.frescoDraweeViewResultImage.setImageURI(imageUri);
 
-        } else if (StringUtils.isNotEmpty(resultPods.get(i).getImageSource())) {
+        } else if (StringUtils.isNotEmpty(resultPods.get(position).getImageSource())) {
 
             // Fetch image from URL
             // Hide Title and Description
@@ -113,7 +135,7 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             resultPodViewHolder.frescoDraweeViewResultImage.setVisibility(View.VISIBLE);
 
-            Uri imageUri = Uri.parse(resultPods.get(i).getImageSource());
+            Uri imageUri = Uri.parse(resultPods.get(position).getImageSource());
 
             // Enable .gif support
 
