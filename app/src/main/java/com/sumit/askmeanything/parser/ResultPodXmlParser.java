@@ -68,10 +68,13 @@ public class ResultPodXmlParser {
 
                         // If image is not from Wikipedia then search using Bing Image API instead
 
-                        String imageUrl = MicrosoftCognitiveAPI.getImageUrl(query);
+                        ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(query, 1);
 
-                        if (StringUtils.isNotEmpty(imageUrl))
-                            resultPod.setImageSource(imageUrl);
+                        if (imageUrls != null && imageUrls.size() > 0) {
+                            // Get the top element
+                            resultPod.setImageSource(imageUrls.get(0));
+                        }
+
                     }
                 }
 

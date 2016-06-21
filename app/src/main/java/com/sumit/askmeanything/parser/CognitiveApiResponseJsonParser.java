@@ -17,19 +17,22 @@ import java.util.List;
  */
 public class CognitiveApiResponseJsonParser {
 
-    public static String parseImageUrlFromResponseJson(JsonObject jsonObject) {
+    public static ArrayList<String> parseImageUrlFromResponseJson(JsonObject jsonObject) {
 
-        String imageUrl = null;
+        ArrayList<String> imageUrls = null;
 
         JsonArray jsonValueArray = jsonObject.getAsJsonArray("value");
 
-        // We need only one image so take the top one
+        if (jsonValueArray != null && jsonValueArray.size() > 0) {
 
-        JsonObject resultObject = (JsonObject) jsonValueArray.get(0);
+            imageUrls = new ArrayList<>();
 
-        imageUrl = resultObject.get("contentUrl").getAsString();
+            for (JsonElement resultObject : jsonValueArray) {
+                imageUrls.add(((JsonObject) resultObject).get("contentUrl").getAsString());
+            }
+        }
 
-        return imageUrl;
+        return imageUrls;
     }
 
     public static List<ResultPod> parseImageDescriptionFromResponseJson(JsonObject jsonObject, Uri imageFileUri) {

@@ -49,6 +49,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_CODE = 100;
+    private static final int MAX_IMAGE_SEARCH_LIMIT = 10;
     private Context context;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton fab;
@@ -229,6 +230,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Start Async API calls and retrieve search results
+
     private void initiateSearch(String query, final SearchType searchType) {
 
         stopTextToSpeech();
@@ -250,7 +253,34 @@ public class MainActivity extends AppCompatActivity {
                     return null;
 
                 if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0])) {
-                    return WolframAlphaAPI.getQueryResult(params[0]);
+
+                    if (StringUtils.containsIgnoreCase(params[0], " gif") || StringUtils.containsIgnoreCase(params[0], ".gif")) {
+
+                        // This means user is trying a gif image search
+
+                        ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(params[0], MAX_IMAGE_SEARCH_LIMIT);
+
+                        if (imageUrls != null && imageUrls.size() > 0) {
+
+                            ArrayList<ResultPod> resultPods = new ArrayList<>();
+
+                            for (String imageUrl : imageUrls) {
+                                ResultPod resultPod = new ResultPod();
+                                resultPod.setDefaultCard(false);
+                                resultPod.setImageSource(imageUrl);
+
+                                resultPods.add(resultPod);
+                            }
+
+                            return resultPods;
+                        }
+
+                    } else {
+
+                        // Normal query search i.e. Language processing
+
+                        return WolframAlphaAPI.getQueryResult(params[0]);
+                    }
                 } else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
                     return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
                 } else if (searchType == SearchType.OCR && imageFileUri != null) {

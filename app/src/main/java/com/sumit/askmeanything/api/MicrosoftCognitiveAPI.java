@@ -35,9 +35,9 @@ public class MicrosoftCognitiveAPI {
     public static final String COMPUTER_VISION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
     public static final String EMOTION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
 
-    public static String getImageUrl(String query) {
+    public static ArrayList<String> getImageUrl(String query, int imageCount) {
 
-        String imageUrl = null;
+        ArrayList<String> imageUrls = null;
         HttpUrl url = null;
 
         try {
@@ -53,7 +53,7 @@ public class MicrosoftCognitiveAPI {
                     .addPathSegment("images")
                     .addPathSegment("search")
                     .addQueryParameter("q", URLEncoder.encode(query, "utf-8"))
-                    .addQueryParameter("count", "1")                    // Only one image needed to display
+                    .addQueryParameter("count", imageCount + "")        // Max images to search
                     .addQueryParameter("offset", "0")
                     .addQueryParameter("mkt", "en-us")
                     .addQueryParameter("size", "medium")                // Keep image size less to load quickly (consider slow network :P)
@@ -76,7 +76,7 @@ public class MicrosoftCognitiveAPI {
             response = client.newCall(request).execute();
             if (response != null) {
                 JsonObject responseObject = new JsonParser().parse(response.body().string()).getAsJsonObject();
-                imageUrl = CognitiveApiResponseJsonParser.parseImageUrlFromResponseJson(responseObject);
+                imageUrls = CognitiveApiResponseJsonParser.parseImageUrlFromResponseJson(responseObject);
             }
 
         } catch (UnsupportedEncodingException e) {
@@ -85,7 +85,7 @@ public class MicrosoftCognitiveAPI {
             e.printStackTrace();
         }
 
-        return imageUrl;
+        return imageUrls;
     }
 
     // Describe image

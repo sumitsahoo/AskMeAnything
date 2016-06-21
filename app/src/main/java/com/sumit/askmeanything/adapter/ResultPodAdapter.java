@@ -66,12 +66,17 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
             @Override
             public boolean onLongClick(View v) {
 
-                if (StringUtils.isNotEmpty(resultPods.get(position).getDescription())) {
-                    ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clipData = ClipData.newPlainText("Description Copied", resultPods.get(position).getDescription());
-                    clipboardManager.setPrimaryClip(clipData);
+                ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clipData;
 
+                if (StringUtils.isNotEmpty(resultPods.get(position).getDescription())) {
+                    clipData = ClipData.newPlainText("AskMeAnything", resultPods.get(position).getDescription());
+                    clipboardManager.setPrimaryClip(clipData);
                     Toast.makeText(context, "Description copied to clipboard", Toast.LENGTH_LONG).show();
+                } else if (StringUtils.isNotEmpty(resultPods.get(position).getImageSource())) {
+                    clipData = ClipData.newPlainText("AskMeAnything", resultPods.get(position).getImageSource());
+                    clipboardManager.setPrimaryClip(clipData);
+                    Toast.makeText(context, "Image link copied to clipboard", Toast.LENGTH_LONG).show();
                 }
 
                 return false;
