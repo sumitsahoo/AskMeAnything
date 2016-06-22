@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0])) {
 
-                    if (StringUtils.containsIgnoreCase(params[0], " gif") || StringUtils.containsIgnoreCase(params[0], ".gif")) {
+                    if ((StringUtils.containsIgnoreCase(params[0], " gif") || StringUtils.containsIgnoreCase(params[0], ".gif")) && params[0].trim().length() > 4) {
 
                         // This means user is trying a gif image search
 
