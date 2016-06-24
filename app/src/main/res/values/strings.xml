@@ -16,7 +16,7 @@
     <string name="menu_search">Search</string>
     <string name="menu_clear_result">Clear Result</string>
     <string name="welcome">Welcome</string>
-    <string name="welcome_description">To get information on anything enter your search query in the search bar. You can also use voice input to enter query.\n\nTap on menu and select \"Recognize Photo\" to take a photo and get description.</string>
+    <string name="welcome_description">To get information on anything enter your search query in the search bar. You can also use voice input to enter query.\n\nTap on menu for more options on image based search.</string>
     <string name="error_network_not_available">Please check your network connectivity and try again.</string>
     <string name="menu_recognize_photo">Recognize Photo</string>
     <string name="menu_run_ocr">OCR</string>

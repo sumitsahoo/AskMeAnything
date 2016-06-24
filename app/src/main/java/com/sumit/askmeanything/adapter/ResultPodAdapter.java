@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +20,7 @@ import com.facebook.drawee.drawable.ScalingUtils;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.sumit.askmeanything.R;
+import com.sumit.askmeanything.Utils;
 import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,8 +32,9 @@ import java.util.List;
  */
 public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.ResultPodViewHolder> {
 
-    List<ResultPod> resultPods;
+    private List<ResultPod> resultPods;
     private Context context;
+    private int lastAnimatedPosition = -1;
 
     public ResultPodAdapter(List<ResultPod> resultPods) {
         this.resultPods = resultPods;
@@ -123,9 +126,6 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
                 resultPodViewHolder.frescoDraweeViewResultImage.setPadding(0, 20, 0, 20);
             }
 
-            resultPodViewHolder.frescoDraweeViewResultImage.getHierarchy()
-                    .setProgressBarImage(new ProgressBarDrawable());
-
             resultPodViewHolder.frescoDraweeViewResultImage.setImageURI(imageUri);
 
         } else if (StringUtils.isNotEmpty(resultPods.get(position).getImageSource())) {
@@ -166,11 +166,36 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             resultPodViewHolder.frescoDraweeViewResultImage.setVisibility(View.GONE);
         }
+
+        // Set Animation
+
+        setAnimation(resultPodViewHolder.cardView, position);
     }
 
     @Override
     public int getItemCount() {
         return resultPods.size();
+    }
+
+
+    // Here is the key method to apply the animation
+
+    private void setAnimation(View viewToAnimate, int position) {
+
+        viewToAnimate.clearAnimation();
+
+        // If the bound view wasn't previously displayed on screen, it's animated
+
+        if (position > lastAnimatedPosition) {
+            lastAnimatedPosition = position;
+            viewToAnimate.setTranslationY(Utils.getScreenHeight(context));
+            viewToAnimate.animate()
+                    .translationY(0)
+                    .setInterpolator(new DecelerateInterpolator(3.f))
+                    .setDuration(700)
+                    .start();
+        } else return;
+
     }
 
     public static class ResultPodViewHolder extends RecyclerView.ViewHolder {
