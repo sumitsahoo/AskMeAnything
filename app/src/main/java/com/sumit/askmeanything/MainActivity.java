@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -20,6 +21,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -50,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_CODE = 100;
     private static final int MAX_IMAGE_SEARCH_LIMIT = 10;
+
     private Context context;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton fab;
@@ -58,8 +61,11 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private RecyclerView recyclerView;
     private LinearLayoutManager linearLayoutManager;
+    private AlertDialog aboutDialog;
     private ResultPodAdapter resultPodAdapter;
     private Uri imageFileUri;
+
+
     private int cameraPermissionCheck = PackageManager.PERMISSION_DENIED;
     private int externalStoragePermissionCheck = PackageManager.PERMISSION_DENIED;
 
@@ -409,16 +415,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+
         if (id == R.id.action_about) {
-            showInformation(getString(R.string.about_dev), getString(R.string.okay));
+            showAboutDialog();
             searchView.clearFocus();
-            return true;
         } else if (id == R.id.action_clear_history) {
             clearSearchHistory();
             searchView.clearFocus();
@@ -474,11 +482,32 @@ public class MainActivity extends AppCompatActivity {
         loadDefaultCard();
     }
 
+    private void showAboutDialog() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle(getString(R.string.about_dialog_title));
+        alertDialogBuilder.setMessage(getString(R.string.about_dev));
+
+        alertDialogBuilder.setPositiveButton(getString(R.string.okay), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        aboutDialog = alertDialogBuilder.create();
+        aboutDialog.show();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
 
         toggleProgressBar(false);
+
+        // Prevent alert dialog window leak
+
+        if (aboutDialog != null)
+            aboutDialog.dismiss();
 
         // Stop Speech Engine
 
