@@ -81,13 +81,7 @@ public class Utils {
         snackbarView.setBackgroundColor(Color.DKGRAY);
 
         TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-        textView.setMaxLines(6);
-
-        //textView.setTextColor(Color.WHITE);
-        //textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
-
-        //TextView snackbarAction = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_action);
-        //snackbarAction.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+        textView.setMaxLines(4);
 
         snackbar.show();
     }
