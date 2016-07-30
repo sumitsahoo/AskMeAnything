@@ -2,6 +2,8 @@
 
 A simple demo App which mimics Siri up to some point. Remember it is not Siri but it is no joke either thanks to WolframAlpha.
 
+And yeah you can also do cat gif search and long tap on a card to copy gif URL to share. To show Gifs Fresco (by Facebook) is used. More about Fresco : https://github.com/facebook/fresco
+
 WolframAlpha API : https://developer.wolframalpha.com
 
 Bing Image Search API : https://www.microsoft.com/cognitive-services/en-us/bing-image-search-api
