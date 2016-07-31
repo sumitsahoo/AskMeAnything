@@ -2,7 +2,7 @@
 
 A simple demo App which mimics Siri up to some point. Remember it is not Siri but it is no joke either thanks to WolframAlpha.
 
-Thanks to Microsoft Cognitive APIs App can Recognize an image, do OCR and also detect emotion of a person in a image.
+Thanks to Microsoft Cognitive APIs, App can Recognize an image, do OCR and also detect emotion of a person in a image.
 
 And yeah you can also do cat gif search and long tap on a card to copy gif URL to share. To show gifs and images Fresco (by Facebook) is used. More about Fresco here : https://github.com/facebook/fresco
 
