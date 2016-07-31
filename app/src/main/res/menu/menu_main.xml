@@ -24,6 +24,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_detect_emotion"
+        android:orderInCategory="100"
+        android:title="@string/menu_detect_emotion"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_clear_history"
         android:orderInCategory="100"
         android:title="@string/menu_clear_history"

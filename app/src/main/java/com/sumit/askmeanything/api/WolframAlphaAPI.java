@@ -1,5 +1,6 @@
 package com.sumit.askmeanything.api;
 
+import com.sumit.askmeanything.Utils;
 import com.sumit.askmeanything.model.ResultPod;
 import com.sumit.askmeanything.parser.ResultPodXmlParser;
 
@@ -18,9 +19,6 @@ import okhttp3.Response;
  * Created by sumit on 6/9/2016.
  */
 public class WolframAlphaAPI {
-
-    public static final String APP_ID = "YOUR_APP_ID";
-    public static final String BASE_URL = "http://api.wolframalpha.com/v2/query?";
 
     // Get query results
 
@@ -60,7 +58,7 @@ public class WolframAlphaAPI {
             finalQuery = query;
 
         try {
-            return BASE_URL + "input=" + URLEncoder.encode(finalQuery, "utf-8") + "&appid=" + APP_ID;
+            return Utils.WOLFRAM_BASE_URL + "input=" + URLEncoder.encode(finalQuery, "utf-8") + "&appid=" + Utils.WOLFRAM_APP_ID;
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

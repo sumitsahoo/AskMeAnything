@@ -5,10 +5,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sumit.askmeanything.Utils;
 import com.sumit.askmeanything.model.ResultPod;
 import com.sumit.askmeanything.parser.CognitiveApiResponseJsonParser;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -19,7 +23,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,10 +33,6 @@ import okhttp3.Response;
  * Created by sumit on 6/14/2016.
  */
 public class MicrosoftCognitiveAPI {
-
-    public static final String IMAGE_SEARCH_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
-    public static final String COMPUTER_VISION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
-    public static final String EMOTION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
 
     public static ArrayList<String> getImageUrl(String query, int imageCount) {
 
@@ -65,7 +64,7 @@ public class MicrosoftCognitiveAPI {
 
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .addHeader("Ocp-Apim-Subscription-Key", IMAGE_SEARCH_SUBSCRIPTION_KEY)
+                    .addHeader("Ocp-Apim-Subscription-Key", Utils.MS_IMAGE_SEARCH_SUBSCRIPTION_KEY)
                     .url(url)
                     .build();
 
@@ -124,7 +123,7 @@ public class MicrosoftCognitiveAPI {
                     .build();
 
             RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("image", "fileName", RequestBody.create(MediaType.parse("image/jpeg"), out.toByteArray()))
+                    .addFormDataPart("image", getImageFileName(imageFileUri.toString()), RequestBody.create(Utils.MEDIA_TYPE_BINARY_JPG, out.toByteArray()))
                     .build();
 
 
@@ -132,7 +131,7 @@ public class MicrosoftCognitiveAPI {
 
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .addHeader("Ocp-Apim-Subscription-Key", COMPUTER_VISION_SUBSCRIPTION_KEY)
+                    .addHeader("Ocp-Apim-Subscription-Key", Utils.MS_COMPUTER_VISION_SUBSCRIPTION_KEY)
                     .addHeader("Content-Type", "application/octet-stream")
                     .url(url)
                     .post(requestBody)
@@ -191,8 +190,9 @@ public class MicrosoftCognitiveAPI {
                     .addQueryParameter("language", "en")
                     .build();
 
-            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("image", "fileName", RequestBody.create(MediaType.parse("image/jpeg"), out.toByteArray()))
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("image", getImageFileName(imageFileUri.toString()), RequestBody.create(Utils.MEDIA_TYPE_BINARY_JPG, out.toByteArray()))
                     .build();
 
 
@@ -200,7 +200,7 @@ public class MicrosoftCognitiveAPI {
 
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .addHeader("Ocp-Apim-Subscription-Key", COMPUTER_VISION_SUBSCRIPTION_KEY)
+                    .addHeader("Ocp-Apim-Subscription-Key", Utils.MS_COMPUTER_VISION_SUBSCRIPTION_KEY)
                     .addHeader("Content-Type", "application/octet-stream")
                     .url(url)
                     .post(requestBody)
@@ -223,6 +223,74 @@ public class MicrosoftCognitiveAPI {
         }
 
         return null;
+    }
+
+    // Detect emotion
+
+    public static ArrayList<ResultPod> detectHumanEmotion(Uri imageFileUri, Context context) {
+
+        InputStream inputStream = null;
+
+        try {
+            inputStream = context.getContentResolver().openInputStream(imageFileUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        Bitmap originalImage = BitmapFactory.decodeStream(inputStream);
+
+        HttpUrl url = null;
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        originalImage.compress(Bitmap.CompressFormat.JPEG, 70, out);
+
+        try {
+
+            // Prepare Image Recognition URL with parameters
+            // End Point URL : https://api.projectoxford.ai/emotion/v1.0/recognize
+
+            url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host("api.projectoxford.ai")
+                    .addPathSegment("emotion")
+                    .addPathSegment("v1.0")
+                    .addPathSegment("recognize")
+                    .build();
+
+            RequestBody requestBody = RequestBody.create(Utils.MEDIA_TYPE_OCTET_STREAM, out.toByteArray(), 0, out.toByteArray().length);
+
+            // Build request and add subscription key header
+
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .addHeader("Ocp-Apim-Subscription-Key", Utils.MS_EMOTION_SUBSCRIPTION_KEY)
+                    .addHeader("Content-Type", "application/octet-stream")
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+
+            Response response = null;
+
+            // Initiate REST call
+
+            response = client.newCall(request).execute();
+            if (response != null) {
+                JsonArray responseArray = new JsonParser().parse(response.body().string()).getAsJsonArray();
+                return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.parseEmotionFromResponseJson(responseArray, imageFileUri);
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static String getImageFileName(String imageFilePath) {
+        return StringUtils.substringAfterLast(imageFilePath, "/");
     }
 
 }

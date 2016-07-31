@@ -18,10 +18,32 @@ import org.apache.commons.lang3.StringUtils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import okhttp3.MediaType;
+
 /**
  * Created by sumit on 6/10/2016.
  */
 public class Utils {
+
+    // WolframAlpha API
+
+    public static final String WOLFRAM_APP_ID = "YOUR_APP_ID";
+    public static final String WOLFRAM_BASE_URL = "http://api.wolframalpha.com/v2/query?";
+
+    // Microsoft Cognitive API
+
+    public static final String MS_IMAGE_SEARCH_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
+    public static final String MS_COMPUTER_VISION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
+    public static final String MS_EMOTION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
+
+    // Media Types
+
+    public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+    public static final MediaType MEDIA_TYPE_BINARY_JPG = MediaType.parse("image/jpg");
+    public static final MediaType MEDIA_TYPE_OCTET_STREAM = MediaType.parse("application/octet-stream");
+    public static final MediaType MEDIA_TYPE_MULTIPART_FORM_DATA = MediaType.parse("multipart/form-data");
+
+    // Other
 
     public static final String WIKI_IMAGE_BASE_URL = "https://upload.wikimedia.org/wikipedia/commons/";
 

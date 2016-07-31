@@ -291,6 +291,8 @@ public class MainActivity extends AppCompatActivity {
                     return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
                 } else if (searchType == SearchType.OCR && imageFileUri != null) {
                     return MicrosoftCognitiveAPI.getOCRText(imageFileUri, context);
+                } else if (searchType == SearchType.EMOTION && imageFileUri != null) {
+                    return MicrosoftCognitiveAPI.detectHumanEmotion(imageFileUri, context);
                 }
 
                 return null;
@@ -450,6 +452,12 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 verifyAndRequestPermission();
             }
+        } else if (id == R.id.action_detect_emotion) {
+            if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
+                startImageCapture(SearchType.EMOTION);
+            } else {
+                verifyAndRequestPermission();
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -472,6 +480,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == SearchType.OCR.value && resultCode == RESULT_OK && imageFileUri != null) {
             // Start OCR
             initiateSearch("", SearchType.OCR);
+        } else if (requestCode == SearchType.EMOTION.value && resultCode == RESULT_OK && imageFileUri != null) {
+            // Initiate Emotion Detection
+            initiateSearch("", SearchType.EMOTION);
         }
     }
 
@@ -534,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public enum SearchType {
-        QUERY(1), IMAGE_DESCRIPTION(2), OCR(3);
+        QUERY(1), IMAGE_DESCRIPTION(2), OCR(3), EMOTION(4);
         private int value;
 
         SearchType(int value) {
