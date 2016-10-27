@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
 
     defaultConfig {
         applicationId "com.sumit.askmeanything"
         minSdkVersion 17
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 8
         versionName "1.8"
         jackOptions {
@@ -29,22 +29,22 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:design:24.1.1'
-    compile 'com.android.support:cardview-v7:24.1.1'
-    compile 'com.android.support:recyclerview-v7:24.1.1'
+    compile 'com.android.support:appcompat-v7:25.0.0'
+    compile 'com.android.support:design:25.0.0'
+    compile 'com.android.support:cardview-v7:25.0.0'
+    compile 'com.android.support:recyclerview-v7:25.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'com.google.code.gson:gson:2.7'
 
     // Facebook Fresco Image Loading Library
 
-    compile 'com.facebook.fresco:fresco:0.12.0'
+    compile 'com.facebook.fresco:fresco:0.14.1'
 
     // For animated GIF support
-    compile 'com.facebook.fresco:animated-gif:0.12.0'
+    compile 'com.facebook.fresco:animated-gif:0.14.1'
 
     // For WebP support, including animated WebP
-    //compile 'com.facebook.fresco:animated-webp:0.11.0'
-    //compile 'com.facebook.fresco:webpsupport:0.11.0'
+    //compile 'com.facebook.fresco:animated-webp:0.14.1'
+    //compile 'com.facebook.fresco:webpsupport:0.14.1'
 }
