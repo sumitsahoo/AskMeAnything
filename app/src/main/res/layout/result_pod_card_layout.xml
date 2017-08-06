@@ -8,17 +8,20 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_rounded_rectangle"
+        android:clipToPadding="false">
 
         <TextView
             android:id="@+id/text_result_pod_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
+            android:elevation="2dp"
             android:padding="5dp"
             android:text="Result Title"
             android:textColor="@color/header_text_color"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/image_result_pod"
@@ -32,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/image_result_pod"
-            android:layout_margin="5dp"
+            android:layout_margin="7dp"
             android:text="Description"
             android:textSize="18sp" />
 

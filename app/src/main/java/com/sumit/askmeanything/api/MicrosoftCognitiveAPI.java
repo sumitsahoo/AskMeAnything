@@ -248,11 +248,11 @@ public class MicrosoftCognitiveAPI {
         try {
 
             // Prepare Image Recognition URL with parameters
-            // End Point URL : https://api.projectoxford.ai/emotion/v1.0/recognize
+            // End Point URL : https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("api.projectoxford.ai")
+                    .host("westus.api.cognitive.microsoft.com")
                     .addPathSegment("emotion")
                     .addPathSegment("v1.0")
                     .addPathSegment("recognize")

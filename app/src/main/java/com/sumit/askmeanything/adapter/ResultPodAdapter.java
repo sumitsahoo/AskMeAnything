@@ -92,11 +92,13 @@ public class ResultPodAdapter extends RecyclerView.Adapter<ResultPodAdapter.Resu
 
             resultPodViewHolder.frescoDraweeViewResultImage.setVisibility(View.VISIBLE);
 
-            // Resource File Example : file:///storage/emulated/0/Pictures/AskMeAnything/IMG_20160617_231541.jpg
+            // Resource File Example 1: file:///storage/emulated/0/Pictures/AskMeAnything/IMG_20160617_231541.jpg
+            // Resource File Example 2: content://com.sumit.askmeanything.provider/external_files/Pictures/AskMeAnything/IMG_20170806_150655.jpg
 
             Uri imageUri = null;
 
-            if (StringUtils.containsIgnoreCase(resultPods.get(position).getImageSource(), "file:///storage/")) {
+            if (StringUtils.containsIgnoreCase(resultPods.get(position).getImageSource(), "file:///storage/")
+                    || StringUtils.containsIgnoreCase(resultPods.get(position).getImageSource(), "content://")) {
 
                 // Load picture taken
 

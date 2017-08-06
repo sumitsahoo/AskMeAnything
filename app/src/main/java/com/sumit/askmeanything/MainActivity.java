@@ -20,6 +20,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -175,6 +176,11 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setSubtitle("");
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
 
@@ -465,7 +471,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void startImageCapture(SearchType searchType) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        imageFileUri = Uri.fromFile(getOutputMediaFile());
+
+        // From API 24 onwards file:// Uri sharing is not allowed through intent.
+        // Use FileProvider to share Uri instead
+        imageFileUri = FileProvider.getUriForFile(MainActivity.this,
+                BuildConfig.APPLICATION_ID + ".provider",
+                getOutputMediaFile());
+
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageFileUri);
 
         startActivityForResult(intent, searchType.value);
