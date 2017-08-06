@@ -9,7 +9,6 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_rounded_rectangle"
         android:clipToPadding="false">
 
         <TextView
@@ -17,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
-            android:elevation="2dp"
+            android:elevation="3dp"
             android:padding="5dp"
             android:text="Result Title"
             android:textColor="@color/header_text_color"
