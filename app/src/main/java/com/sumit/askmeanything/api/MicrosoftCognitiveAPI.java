@@ -36,19 +36,21 @@ public class MicrosoftCognitiveAPI {
 
     public static ArrayList<String> getImageUrl(String query, int imageCount) {
 
+        // Bing image search API reference : https://msdn.microsoft.com/en-us/library/dn760791.aspx
+
         ArrayList<String> imageUrls = null;
         HttpUrl url = null;
 
         try {
 
             // Prepare Bing Search URL with parameters
-            // End Point URL : https://bingapis.azure-api.net/api/v5/images/search
+            // End Point URL : https://api.cognitive.microsoft.com/bing/v5.0/images/search?q=sailing+dinghies&mkt=en-us
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("bingapis.azure-api.net")
-                    .addPathSegment("api")
-                    .addPathSegment("v5")
+                    .host("api.cognitive.microsoft.com")
+                    .addPathSegment("bing")
+                    .addPathSegment("v5.0")
                     .addPathSegment("images")
                     .addPathSegment("search")
                     .addQueryParameter("q", URLEncoder.encode(query, "utf-8"))
@@ -91,6 +93,8 @@ public class MicrosoftCognitiveAPI {
 
     public static ArrayList<ResultPod> getImageDescription(Uri imageFileUri, Context context) {
 
+        // Vision API reference : https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/
+
         InputStream inputStream = null;
 
         try {
@@ -110,11 +114,11 @@ public class MicrosoftCognitiveAPI {
         try {
 
             // Prepare Image Recognition URL with parameters
-            // End Point URL : https://api.projectoxford.ai/vision/v1.0/analyze[?visualFeatures][&details]
+            // End Point URL : https://westcentralus.api.cognitive.microsoft.com/vision/v1.0/analyze
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("api.projectoxford.ai")
+                    .host("westcentralus.api.cognitive.microsoft.com")
                     .addPathSegment("vision")
                     .addPathSegment("v1.0")
                     .addPathSegment("analyze")
@@ -179,11 +183,11 @@ public class MicrosoftCognitiveAPI {
         try {
 
             // Prepare Image Recognition URL with parameters
-            // End Point URL : https://api.projectoxford.ai/vision/v1.0/ocr[?language][&detectOrientation ]
+            // End Point URL : https://westcentralus.api.cognitive.microsoft.com/vision/v1.0/ocr[?language][&detectOrientation ]
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("api.projectoxford.ai")
+                    .host("westcentralus.api.cognitive.microsoft.com")
                     .addPathSegment("vision")
                     .addPathSegment("v1.0")
                     .addPathSegment("ocr")
