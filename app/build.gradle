@@ -8,8 +8,8 @@ android {
         applicationId "com.sumit.askmeanything"
         minSdkVersion 17
         targetSdkVersion 26
-        versionCode 8
-        versionName "1.8"
+        versionCode 9
+        versionName "1.9"
 
     }
 
@@ -32,6 +32,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.1'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
     // Facebook Fresco Image Loading Library
     compile 'com.facebook.fresco:fresco:1.4.0'
     // For animated GIF support

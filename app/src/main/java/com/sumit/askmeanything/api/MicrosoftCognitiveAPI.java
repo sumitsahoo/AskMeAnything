@@ -34,9 +34,12 @@ import okhttp3.Response;
  */
 public class MicrosoftCognitiveAPI {
 
+    // To view all the API keys for a MS account go here : https://azure.microsoft.com/en-in/try/cognitive-services/my-apis/
+
     public static ArrayList<String> getImageUrl(String query, int imageCount) {
 
         // Bing image search API reference : https://msdn.microsoft.com/en-us/library/dn760791.aspx
+        // Reference 2 : https://docs.microsoft.com/en-us/azure/cognitive-services/bing-image-search/search-the-web
 
         ArrayList<String> imageUrls = null;
         HttpUrl url = null;
@@ -118,7 +121,7 @@ public class MicrosoftCognitiveAPI {
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("westcentralus.api.cognitive.microsoft.com")
+                    .host("westus.api.cognitive.microsoft.com")
                     .addPathSegment("vision")
                     .addPathSegment("v1.0")
                     .addPathSegment("analyze")
@@ -151,8 +154,6 @@ public class MicrosoftCognitiveAPI {
                 return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.parseImageDescriptionFromResponseJson(responseObject, imageFileUri);
             }
 
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -183,11 +184,11 @@ public class MicrosoftCognitiveAPI {
         try {
 
             // Prepare Image Recognition URL with parameters
-            // End Point URL : https://westcentralus.api.cognitive.microsoft.com/vision/v1.0/ocr[?language][&detectOrientation ]
+            // End Point URL : https://westus.api.cognitive.microsoft.com/vision/v1.0/ocr[?language][&detectOrientation ]
 
             url = new HttpUrl.Builder()
                     .scheme("https")
-                    .host("westcentralus.api.cognitive.microsoft.com")
+                    .host("westus.api.cognitive.microsoft.com")
                     .addPathSegment("vision")
                     .addPathSegment("v1.0")
                     .addPathSegment("ocr")
@@ -220,8 +221,6 @@ public class MicrosoftCognitiveAPI {
                 return (ArrayList<ResultPod>) CognitiveApiResponseJsonParser.parseOcrTextFromResponseJson(responseObject, imageFileUri);
             }
 
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

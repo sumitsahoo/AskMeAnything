@@ -11,7 +11,7 @@
     <string name="wait_message">One moment please ...</string>
     <string name="response_title">Response Title</string>
     <string name="response_description">Response Description</string>
-    <string name="about_dev">App Version : v1.8 (beta)\n\nDesigned and Developed by Sumit\n\nLanguage processing by WolframAlpha API and Image search by Microsoft Cognitive API</string>
+    <string name="about_dev">App Version : v1.9 (beta)\n\nDesigned and Developed by Sumit\n\nLanguage processing by WolframAlpha API and Image search by Microsoft Cognitive API</string>
     <string name="search_hint">Ask Me Anything ...</string>
     <string name="menu_search">Search</string>
     <string name="menu_clear_result">Clear Result</string>

@@ -35,14 +35,17 @@ import android.view.View;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.sumit.askmeanything.adapter.ResultPodAdapter;
+import com.sumit.askmeanything.api.GoogleCustomSearchAPI;
 import com.sumit.askmeanything.api.MicrosoftCognitiveAPI;
 import com.sumit.askmeanything.api.WolframAlphaAPI;
 import com.sumit.askmeanything.contentprovider.SearchSuggestionProvider;
 import com.sumit.askmeanything.model.ResultPod;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -70,20 +73,13 @@ public class MainActivity extends AppCompatActivity {
     private int cameraPermissionCheck = PackageManager.PERMISSION_DENIED;
     private int externalStoragePermissionCheck = PackageManager.PERMISSION_DENIED;
 
-    private static File getOutputMediaFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "AskMeAnything");
+    private final int QUERY = 1;
+    private final int IMAGE_DESCRIPTION = 2;
+    private final int OCR = 3;
+    private final int EMOTION = 4;
 
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                return null;
-            }
-        }
+    private SearchTask searchTask;
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        return new File(mediaStorageDir.getPath() + File.separator +
-                "IMG_" + timeStamp + ".jpg");
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (searchView != null) {
                     keepSearchHistory(searchView.getQuery().toString());
-                    initiateSearch(searchView.getQuery().toString(), SearchType.QUERY);
+                    initiateSearch(searchView.getQuery().toString(), QUERY);
                 }
             }
         });
@@ -238,86 +234,22 @@ public class MainActivity extends AppCompatActivity {
             }
 
             keepSearchHistory(query);
-            initiateSearch(query, SearchType.QUERY);
+            initiateSearch(query, QUERY);
         }
     }
 
     // Start Async API calls and retrieve search results
 
-    private void initiateSearch(String query, final SearchType searchType) {
+    private void initiateSearch(String query, int searchType) {
 
-        stopTextToSpeech();
+        if (searchTask != null) {
+            searchTask.cancel(true);
+            searchTask = null;
+        }
 
-        searchView.clearFocus();
-
-        new AsyncTask<String, Void, ArrayList<ResultPod>>() {
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                toggleProgressBar(true);
-            }
-
-            @Override
-            protected ArrayList<ResultPod> doInBackground(String... params) {
-
-                if (!Utils.isNetworkAvailable(context))
-                    return null;
-
-                if (searchType == SearchType.QUERY && !StringUtils.isEmpty(params[0])) {
-
-                    if ((StringUtils.containsIgnoreCase(params[0], " gif") || StringUtils.containsIgnoreCase(params[0], ".gif")) && params[0].trim().length() > 4) {
-
-                        // This means user is trying a gif image search
-
-                        ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(params[0], MAX_IMAGE_SEARCH_LIMIT);
-
-                        if (imageUrls != null && imageUrls.size() > 0) {
-
-                            ArrayList<ResultPod> resultPods = new ArrayList<>();
-
-                            for (String imageUrl : imageUrls) {
-                                ResultPod resultPod = new ResultPod();
-                                resultPod.setDefaultCard(false);
-                                resultPod.setImageSource(imageUrl);
-
-                                resultPods.add(resultPod);
-                            }
-
-                            return resultPods;
-                        }
-
-                    } else {
-
-                        // Normal query search i.e. Language processing
-
-                        return WolframAlphaAPI.getQueryResult(params[0]);
-                    }
-                } else if (searchType == SearchType.IMAGE_DESCRIPTION && imageFileUri != null) {
-                    return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
-                } else if (searchType == SearchType.OCR && imageFileUri != null) {
-                    return MicrosoftCognitiveAPI.getOCRText(imageFileUri, context);
-                } else if (searchType == SearchType.EMOTION && imageFileUri != null) {
-                    return MicrosoftCognitiveAPI.detectHumanEmotion(imageFileUri, context);
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(ArrayList<ResultPod> resultPods) {
-                super.onPostExecute(resultPods);
-
-                toggleProgressBar(false);
-
-                if (resultPods != null && resultPods.size() > 0) {
-                    populateResult(resultPods);
-                } else if (!Utils.isNetworkAvailable(context)) {
-                    showInformation(getString(R.string.error_network_not_available), getString(R.string.okay));
-                } else
-                    showInformation(getString(R.string.error_unable_to_search), getString(R.string.dismiss));
-            }
-        }.execute(query);
+        String[] queryParameter = {query, searchType + ""};
+        searchTask = new SearchTask();
+        searchTask.execute(queryParameter);
     }
 
     private void loadDefaultCard() {
@@ -400,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 keepSearchHistory(query);
-                initiateSearch(query, SearchType.QUERY);
+                initiateSearch(query, QUERY);
                 return false;
             }
 
@@ -437,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
             searchView.clearFocus();
         } else if (id == R.id.action_clear_history) {
             clearSearchHistory();
+            deleteImageHistory();
             searchView.clearFocus();
         } else if (id == R.id.action_clear_result) {
             clearResult();
@@ -446,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
             stopTextToSpeech();
 
             if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
-                startImageCapture(SearchType.IMAGE_DESCRIPTION);
+                startImageCapture(IMAGE_DESCRIPTION);
             } else {
                 verifyAndRequestPermission();
             }
@@ -454,13 +387,13 @@ public class MainActivity extends AppCompatActivity {
             stopTextToSpeech();
 
             if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
-                startImageCapture(SearchType.OCR);
+                startImageCapture(OCR);
             } else {
                 verifyAndRequestPermission();
             }
         } else if (id == R.id.action_detect_emotion) {
             if (cameraPermissionCheck == PackageManager.PERMISSION_GRANTED && externalStoragePermissionCheck == PackageManager.PERMISSION_GRANTED) {
-                startImageCapture(SearchType.EMOTION);
+                startImageCapture(EMOTION);
             } else {
                 verifyAndRequestPermission();
             }
@@ -469,7 +402,40 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void startImageCapture(SearchType searchType) {
+    private static File getOutputMediaFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "AskMeAnything");
+
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                return null;
+            }
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        return new File(mediaStorageDir.getPath() + File.separator +
+                "IMG_" + timeStamp + ".jpg");
+    }
+
+    // Delete stored images from directory
+
+    private boolean deleteImageHistory() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "AskMeAnything");
+
+        if (mediaStorageDir.exists() && mediaStorageDir.isDirectory() && mediaStorageDir.canWrite()) {
+            try {
+                FileUtils.cleanDirectory(mediaStorageDir);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    private void startImageCapture(int searchType) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         // From API 24 onwards file:// Uri sharing is not allowed through intent.
@@ -481,21 +447,21 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageFileUri);
 
-        startActivityForResult(intent, searchType.value);
+        startActivityForResult(intent, searchType);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == SearchType.IMAGE_DESCRIPTION.value && resultCode == RESULT_OK && imageFileUri != null) {
+        if (requestCode == IMAGE_DESCRIPTION && resultCode == RESULT_OK && imageFileUri != null) {
             // Start searching for the description for the image taken
-            initiateSearch("", SearchType.IMAGE_DESCRIPTION);
-        } else if (requestCode == SearchType.OCR.value && resultCode == RESULT_OK && imageFileUri != null) {
+            initiateSearch("", IMAGE_DESCRIPTION);
+        } else if (requestCode == OCR && resultCode == RESULT_OK && imageFileUri != null) {
             // Start OCR
-            initiateSearch("", SearchType.OCR);
-        } else if (requestCode == SearchType.EMOTION.value && resultCode == RESULT_OK && imageFileUri != null) {
+            initiateSearch("", OCR);
+        } else if (requestCode == EMOTION && resultCode == RESULT_OK && imageFileUri != null) {
             // Initiate Emotion Detection
-            initiateSearch("", SearchType.EMOTION);
+            initiateSearch("", EMOTION);
         }
     }
 
@@ -504,6 +470,7 @@ public class MainActivity extends AppCompatActivity {
         stopTextToSpeech();
         recyclerView.setAdapter(null);
         loadDefaultCard();
+        deleteImageHistory();
     }
 
     private void showAboutDialog() {
@@ -557,12 +524,88 @@ public class MainActivity extends AppCompatActivity {
         initTextToSpeech();
     }
 
-    public enum SearchType {
-        QUERY(1), IMAGE_DESCRIPTION(2), OCR(3), EMOTION(4);
-        private int value;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        SearchType(int value) {
-            this.value = value;
+        // Cancel background task if any to prevent memory leak
+
+        if (searchTask != null) {
+            searchTask.cancel(true);
+            searchTask = null;
+        }
+    }
+
+    private class SearchTask extends AsyncTask<String, Void, ArrayList<ResultPod>> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            searchView.clearFocus();
+            stopTextToSpeech();
+            toggleProgressBar(true);
+        }
+
+        @Override
+        protected ArrayList<ResultPod> doInBackground(String... params) {
+
+            if (!Utils.isNetworkAvailable(context))
+                return null;
+
+            int searchType = Integer.parseInt(params[1]);
+
+            if (searchType == QUERY && !StringUtils.isEmpty(params[0])) {
+
+                if ((StringUtils.containsIgnoreCase(params[0], " gif") || StringUtils.containsIgnoreCase(params[0], ".gif")) && params[0].trim().length() > 4) {
+
+                    // This means user is trying a gif image search
+
+                    //ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(params[0], MAX_IMAGE_SEARCH_LIMIT);
+                    ArrayList<String> imageUrls = GoogleCustomSearchAPI.getImageUrl(params[0], MAX_IMAGE_SEARCH_LIMIT);
+
+                    if (imageUrls != null && imageUrls.size() > 0) {
+
+                        ArrayList<ResultPod> resultPods = new ArrayList<>();
+
+                        for (String imageUrl : imageUrls) {
+                            ResultPod resultPod = new ResultPod();
+                            resultPod.setDefaultCard(false);
+                            resultPod.setImageSource(imageUrl);
+
+                            resultPods.add(resultPod);
+                        }
+
+                        return resultPods;
+                    }
+
+                } else {
+
+                    // Normal query search i.e. Language processing
+
+                    return WolframAlphaAPI.getQueryResult(params[0]);
+                }
+            } else if (searchType == IMAGE_DESCRIPTION && imageFileUri != null) {
+                return MicrosoftCognitiveAPI.getImageDescription(imageFileUri, context);
+            } else if (searchType == OCR && imageFileUri != null) {
+                return MicrosoftCognitiveAPI.getOCRText(imageFileUri, context);
+            } else if (searchType == EMOTION && imageFileUri != null) {
+                return MicrosoftCognitiveAPI.detectHumanEmotion(imageFileUri, context);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<ResultPod> resultPods) {
+            super.onPostExecute(resultPods);
+
+            toggleProgressBar(false);
+
+            if (resultPods != null && resultPods.size() > 0) {
+                populateResult(resultPods);
+            } else if (!Utils.isNetworkAvailable(context)) {
+                showInformation(getString(R.string.error_network_not_available), getString(R.string.okay));
+            } else
+                showInformation(getString(R.string.error_unable_to_search), getString(R.string.dismiss));
         }
     }
 }

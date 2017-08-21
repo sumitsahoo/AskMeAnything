@@ -1,7 +1,7 @@
 package com.sumit.askmeanything.parser;
 
 import com.sumit.askmeanything.Utils;
-import com.sumit.askmeanything.api.MicrosoftCognitiveAPI;
+import com.sumit.askmeanything.api.GoogleCustomSearchAPI;
 import com.sumit.askmeanything.model.ResultPod;
 
 import org.apache.commons.lang3.StringUtils;
@@ -67,9 +67,10 @@ public class ResultPodXmlParser {
                         resultPod.setImageSource(Utils.getWikiImageURL(imageElement.getTextContent()));
                     else {
 
-                        // If image is not from Wikipedia then search using Bing Image API instead
+                        // If image is not from Wikipedia then search using Bing Image API / Google Custom Image Search API instead
 
-                        ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(query, 1);
+                        //ArrayList<String> imageUrls = MicrosoftCognitiveAPI.getImageUrl(query, 1);
+                        ArrayList<String> imageUrls = GoogleCustomSearchAPI.getImageUrl(query, 1);
 
                         if (imageUrls != null && imageUrls.size() > 0) {
                             // Get the top element
