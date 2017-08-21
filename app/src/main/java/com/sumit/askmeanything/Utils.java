@@ -35,6 +35,11 @@ public class Utils {
     public static final String MS_IMAGE_SEARCH_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
     public static final String MS_COMPUTER_VISION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
     public static final String MS_EMOTION_SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
+    
+    // Google Custom Image Search API
+
+    public static final String GOOGLE_CUSTOM_SEARCH_CX_CODE = "YOUR_CX_KEY";
+    public static final String GOOGLE_CUSTOM_SEARCH_API_KEY = "YOUR_API_KEY";
 
     // Media Types
 
