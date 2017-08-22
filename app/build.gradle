@@ -8,8 +8,8 @@ android {
         applicationId "com.sumit.askmeanything"
         minSdkVersion 17
         targetSdkVersion 26
-        versionCode 9
-        versionName "1.9"
+        versionCode 10
+        versionName "2.0"
 
     }
 
@@ -38,5 +38,10 @@ dependencies {
     compile 'com.facebook.fresco:fresco:1.4.0'
     // For animated GIF support
     compile 'com.facebook.fresco:animated-gif:1.4.0'
+    // Lottie Animation : https://github.com/airbnb/lottie-android
+    compile 'com.airbnb.android:lottie:2.2.0'
+    // https://github.com/Tapadoo/Alerter
+    compile 'com.tapadoo.android:alerter:2.0.0'
+
 
 }

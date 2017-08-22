@@ -1,7 +1,6 @@
 package com.sumit.askmeanything;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,7 +20,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -32,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.sumit.askmeanything.adapter.ResultPodAdapter;
@@ -60,10 +59,10 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton fab;
-    private ProgressDialog progressDialog;
     private TextToSpeech textToSpeech;
     private SearchView searchView;
     private RecyclerView recyclerView;
+    private LottieAnimationView lottieAnimationView;
     private LinearLayoutManager linearLayoutManager;
     private AlertDialog aboutDialog;
     private ResultPodAdapter resultPodAdapter;
@@ -91,10 +90,67 @@ public class MainActivity extends AppCompatActivity {
         initFrescoLibrary();
 
         initViews();
+        //toggleLottieAnimation(false);
         loadDefaultCard();
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1)
             verifyAndRequestPermission();
+    }
+
+    private void initViews() {
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        searchView = (SearchView) findViewById(R.id.action_search);
+        searchView.setQueryRefinementEnabled(true);
+        searchView.setIconifiedByDefault(false);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                keepSearchHistory(query);
+                initiateSearch(query, QUERY);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+
+        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
+        lottieAnimationView = (LottieAnimationView) findViewById(R.id.lottie_animation_view);
+
+        // Setup views
+
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        // Setting the size as fixed improves the performance
+        recyclerView.setHasFixedSize(true);
+
+        linearLayoutManager = new LinearLayoutManager(context);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        // Add action listeners
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (searchView != null) {
+                    keepSearchHistory(searchView.getQuery().toString());
+                    initiateSearch(searchView.getQuery().toString(), QUERY);
+                }
+            }
+        });
+
     }
 
     // Initialize Fresco Image Library
@@ -118,6 +174,29 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         Fresco.initialize(context, config);
+    }
+
+    private void toggleLottieAnimation(boolean isShowAnimation) {
+        if (isShowAnimation) {
+
+            lottieAnimationView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+
+            if (lottieAnimationView.isAnimating()) {
+                lottieAnimationView.clearAnimation();
+            }
+            lottieAnimationView.setAnimation("material_wave_loading.json");
+            lottieAnimationView.loop(true);
+            lottieAnimationView.playAnimation();
+        } else {
+
+            lottieAnimationView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+
+            if (lottieAnimationView.isAnimating())
+                lottieAnimationView.pauseAnimation();
+            lottieAnimationView.clearAnimation();
+        }
     }
 
     private void verifyAndRequestPermission() {
@@ -168,43 +247,6 @@ public class MainActivity extends AppCompatActivity {
         suggestions.clearHistory();
     }
 
-    private void initViews() {
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle("");
-        toolbar.setSubtitle("");
-
-        getSupportActionBar().setTitle("");
-        getSupportActionBar().setSubtitle("");
-
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
-
-        // Setup views
-
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        // Setting the size as fixed improves the performance
-        recyclerView.setHasFixedSize(true);
-
-        linearLayoutManager = new LinearLayoutManager(context);
-        recyclerView.setLayoutManager(linearLayoutManager);
-
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-
-        // Add action listeners
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (searchView != null) {
-                    keepSearchHistory(searchView.getQuery().toString());
-                    initiateSearch(searchView.getQuery().toString(), QUERY);
-                }
-            }
-        });
-
-    }
 
     private void initTextToSpeech() {
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
@@ -290,17 +332,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void toggleProgressBar(boolean isShow) {
-
-        if (progressDialog != null && isShow && !progressDialog.isShowing()) {
-            progressDialog.show();
-        } else {
-            if (progressDialog != null) {
-                progressDialog.dismiss();
-            }
-        }
-
-    }
 
     private void showInformation(String messageContent, String actionMessage) {
 
@@ -317,30 +348,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-
-        // Get SearchView
-
-        MenuItem menuItem = menu.findItem(R.id.action_search);
-        searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
-        searchView.setQueryRefinementEnabled(true);
-        searchView.setIconifiedByDefault(false);
-
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                keepSearchHistory(query);
-                initiateSearch(query, QUERY);
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
 
         return true;
     }
@@ -493,7 +500,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
-        toggleProgressBar(false);
+        toggleLottieAnimation(false);
 
         // Prevent alert dialog window leak
 
@@ -512,16 +519,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // Setup progress bar
-
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setMessage(getString(R.string.wait_message));
-            progressDialog.setCancelable(false);
-            progressDialog.setIndeterminate(true);
-        }
-
         initTextToSpeech();
+
     }
 
     @Override
@@ -542,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
             super.onPreExecute();
             searchView.clearFocus();
             stopTextToSpeech();
-            toggleProgressBar(true);
+            toggleLottieAnimation(true);
         }
 
         @Override
@@ -598,7 +597,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(ArrayList<ResultPod> resultPods) {
             super.onPostExecute(resultPods);
 
-            toggleProgressBar(false);
+            toggleLottieAnimation(false);
 
             if (resultPods != null && resultPods.size() > 0) {
                 populateResult(resultPods);
